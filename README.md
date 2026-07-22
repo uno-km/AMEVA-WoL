@@ -43,7 +43,7 @@ flowchart TD
             SCHED[Always-On Scheduler]
         end
 
-        subgraph Target Systems
+        subgraph TARGET_SYSTEMS [Target Systems]
             PC1[Workstation PC]
             PC2[Server Node]
             NAS[Storage Appliance]
@@ -53,7 +53,7 @@ flowchart TD
     TG <-->|HTTPS Long Polling| BOT
     BOT <--> REG
     BOT --- LOCK
-    SCHED -->|ICMP Reachability Check| Target Systems
+    SCHED -->|ICMP Reachability Check| TARGET_SYSTEMS
     BOT -->|UDP Magic Packet Broadcast| PC1
     BOT -->|UDP Magic Packet Broadcast| PC2
     BOT -->|UDP Magic Packet Broadcast| NAS
@@ -127,12 +127,12 @@ python -m ameva_wol --check-config
 ## System Deployment
 
 ### Termux / Android Boot Setup
-Refer to `termux/start-ameva-wol.sh` for boot initialization details.
+Refer to `deploy/termux/start-ameva-wol.sh` for boot initialization details.
 
 ### Systemd Service Configuration
-Service templates are provided under `systemd/`:
-- User service: `systemd/ameva-wol-user.service`
-- System service: `systemd/ameva-wol.service`
+Service templates are provided under `deploy/systemd/`:
+- User service: `deploy/systemd/ameva-wol-user.service`
+- System service: `deploy/systemd/ameva-wol.service`
 
 ---
 
