@@ -1,67 +1,82 @@
-# AMEVA-WoL ⚡
+# AMEVA-WoL
 
-> **Lightweight, Secure, Telegram-Controlled Wake-on-LAN Gateway for Termux & Linux**  
-> **안드로이드 Termux 및 저사양 리눅스를 위한 초경량·고보안 텔레그램 Wake-on-LAN 게이트웨이**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/)
+> Lightweight, Secure Telegram-Controlled Wake-on-LAN Gateway for Termux and Linux
 
 ---
 
-## 📚 텔레그램 봇 설정 & 초보자 가이드
+## Overview
 
-텔레그램 앱 설치부터 봇 생성, User ID 확인, 실행 방법까지 쉽게 작성된 가이드 문서입니다. 아래 링크를 눌러 확인하세요:
+AMEVA-WoL is an unprivileged Wake-on-LAN (WoL) gateway engine designed for continuous deployment on Android (Termux) and Linux host machines. Command processing operates strictly via outbound Telegram Bot API long polling without exposing inbound network ports, HTTP listeners, or requiring router port forwarding.
 
-- 🌐 **웹 HTML 가이드 (추천)**: [docs/telegram_setup_guide.html](file:///c:/ameva/AMEVA-WoL/docs/telegram_setup_guide.html) (브라우저로 열면 예쁜 디자인으로 볼 수 있습니다.)
-- 📝 **마크다운 가이드**: [docs/telegram_setup_guide.md](file:///c:/ameva/AMEVA-WoL/docs/telegram_setup_guide.md)
-
----
-
-## 📌 개요 (Overview)
-
-**AMEVA-WoL**은 구형 안드로이드 스마트폰(Samsung Galaxy S7 등 Termux 환경) 및 저사양 리눅스 노트북/서버에서 **루트(Root) 권한 없이** 24시간 작동하는 텔레그램 조종 Wake-on-LAN (WoL) 게이트웨이입니다.
-
-사용자가 텔레그램으로 메세지를 전송하면, 게이트웨이가 공유기 내부 네트워크(LAN)로 102바이트 UDP Magic Packet을 브로드캐스트하여 원격으로 컴퓨터를 켭니다.
+For step-by-step bot creation, user authorization setup, and host configuration, consult the [Telegram Setup Guide](docs/telegram_setup_guide.md).
 
 ---
 
-## ✨ 핵심 기능 (Key Features)
+## Technical Specifications
 
-- 🚀 **초경량 저전력**: 유휴 CPU 점유율 < 0.1%, 메모리 사용량 ~25–40 MB.
-- 🛡️ **포트 포워딩 / 웹서버 없음**: 텔레그램 롱 폴링(Long Polling) 방식만 사용하여 공유기 포트포워딩이나 공인 IP, DDNS가 일절 필요 없습니다.
-- 🔐 **강력한 보안**:
-  - `ALLOWED_USER_IDS`에 지정된 텔레그램 사용자만 명령 가능.
-  - 셀 명령어 주입 방지 (`shell=False`).
-  - 봇 토큰 및 개인정보 자동 마스킹 및 예외 안전 처리.
-  - 슬라이딩 윈도우 Rate Limiting 적용.
-- 💾 **원자적(Atomic) 데이터 저장**: `devices.json` 저장 시 임시 파일 후 `fsync()` 교체로 데이터 손상 방지.
-- 🔒 **단일 인스턴스 파일 락**: 프로세스 중복 실행 자동 방지 (`.lock`).
-- 🕒 **Always-On 상시 감시 모드**: 설정한 주기마다 컴퓨터 켜짐 상태(Ping)를 확인하고, 꺼져있으면 자동으로 깨우는 기능.
+- **Low Overhead**: Idle CPU footprint < 0.1%, RAM consumption ~25–40 MB.
+- **Zero Inbound Network Exposure**: Outbound long polling over HTTPS eliminates public IP requirements, port forwarding, and web servers.
+- **Security Posture**:
+  - Command execution restricted to whitelisted Telegram User IDs (`ALLOWED_USER_IDS`) and Chat IDs (`ALLOWED_CHAT_IDS`).
+  - Subprocess calls (`ping`) execute using explicit argument vectors (`shell=False`). Dynamic string evaluation (`eval`/`exec`) is omitted.
+  - Secret tokens are redacted dynamically from loggers and exception tracebacks.
+  - Unprivileged execution posture (root/sudo is neither required nor requested).
+- **Atomic Data Persistence**: Device registry writes (`data/devices.json`) execute using temporary file buffers, `os.fsync()`, atomic replacement, and restricted `0600` file permissions.
+- **Single-Instance Enforcement**: Process locking (`.lock`) prevents concurrent execution instances over identical data directories.
+- **Always-On Automated Monitoring**: Optional background scheduler pings registered IP targets periodically and transmits Magic Packets upon host reachability failure.
 
 ---
 
-## 🚀 빠른 시작 가이드 (Quick Start)
+## Architecture Diagram
 
-### 1. 설치 및 의존성 구성
+```mermaid
+flowchart TD
+    subgraph Telegram Cloud
+        TG[Telegram API]
+    end
+
+    subgraph Local Area Network
+        subgraph Gateway Node
+            BOT[AMEVA-WoL Core]
+            REG[(devices.json)]
+            LOCK[Instance Lock]
+            SCHED[Always-On Scheduler]
+        end
+
+        subgraph Target Systems
+            PC1[Workstation PC]
+            PC2[Server Node]
+            NAS[Storage Appliance]
+        end
+    end
+
+    TG <-->|HTTPS Long Polling| BOT
+    BOT <--> REG
+    BOT --- LOCK
+    SCHED -->|ICMP Reachability Check| Target Systems
+    BOT -->|UDP Magic Packet Broadcast| PC1
+    BOT -->|UDP Magic Packet Broadcast| PC2
+    BOT -->|UDP Magic Packet Broadcast| NAS
+```
+
+---
+
+## Quick Start
+
+### 1. Installation
 ```bash
 git clone https://github.com/uno-km/AMEVA-WoL.git
 cd AMEVA-WoL
 
-# 가상환경 생성 및 활성화
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# 패키지 설치
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 2. `.env` 파일 작성
-```bash
-cp .env.example .env
-chmod 600 .env
-```
-`.env` 파일을 열고 텔레그램 봇 토큰과 사용자 ID를 입력합니다:
+### 2. Configuration Setup
+Create a `.env` configuration file in the repository root directory:
 ```env
 TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_ExampleToken
 ALLOWED_USER_IDS=123456789
@@ -71,51 +86,66 @@ LOG_LEVEL=INFO
 DATA_DIR=./data
 ```
 
-### 3. A-Z 시스템 자가 진단 스크립트 실행 (System Audit)
-
-AMEVA-WoL에 포함된 진단 스크립트를 실행하면 Python 버전, 라이브러리, `.env` 토큰 유효성, User ID, 데이터 디렉토리 권한, 네트워크 연결을 A부터 Z까지 점검하고 부족한 항목의 해결 방법(Heuristic Fix)을 자동으로 안내합니다:
+### 3. Automated Diagnostic Audit
+Execute the system diagnostic script to perform an A-to-Z environment verification:
 
 - **Termux / Linux**: `bash scripts/check-environment.sh`
 - **Windows**: `powershell -ExecutionPolicy Bypass -File .\scripts\check-environment.ps1`
 
+Python configuration check:
 ```bash
-# Python 내장 자가 진단도 지원됩니다:
 python -m ameva_wol --check-config
 ```
 
-### 4. 실행
-- **기본 대기 모드**:
+### 4. Execution Modes
+- **Default Mode** (Telegram command processing only):
   ```bash
   python -m ameva_wol
   ```
-- **Always-On 감시 모드 (5분 주기)**:
+- **Always-On Mode** (Telegram polling + 5-minute periodic ping & keep-alive wake):
   ```bash
   python -m ameva_wol --always-on 5
   ```
 
 ---
 
-## 📖 텔레그램 주요 명령어
+## Command Reference
 
-| 명령어 | 설명 | 사용 예시 |
+| Command | Syntax / Parameters | Description |
 | :--- | :--- | :--- |
-| `/start` | 게이트웨이 인증 상태 및 안내 | `/start` |
-| `/how` | 상세 사용 설명서 | `/how` |
-| `/id` | 내 텔레그램 User ID 확인 | `/id` |
-| `/add` | 컴퓨터 등록 | `/add desktop AA:BB:CC:DD:EE:01 192.168.0.100` |
-| `/wake` | 컴퓨터 깨우기 (WoL 전송) | `/wake desktop` 또는 `/wake all` |
-| `/status` | 컴퓨터 켜짐 상태 확인 (Ping) | `/status desktop` 또는 `/status all` |
-| `/list` | 등록된 장치 목록 보기 | `/list` |
-| `/remove` | 등록된 장치 삭제 | `/remove desktop` |
+| `/start` | `/start` | Display authorization status and command summary |
+| `/how` | `/how` | Display operational documentation and network constraints |
+| `/id` | `/id` | Display requesting Telegram User ID and Chat ID |
+| `/add` | `/add [--overwrite] <alias> <mac> [ip] [broadcast] [port]` | Register or update target device entry |
+| `/wake` | `/wake [alias\|all]` | Transmit Magic Packet to specified target or all hosts |
+| `/status` | `/status [alias\|all]` | Execute ICMP reachability check (Does not send WoL) |
+| `/list` | `/list` | Output compact list of registered devices |
+| `/remove` | `/remove <alias>` | Unregister specified target device |
 
 ---
 
-## 📱 Termux / 안드로이드 부팅 설정
+## System Deployment
 
-Termux 실행 및 Termux:Boot 자동 부팅 설정은 [docs/telegram_setup_guide.html](file:///c:/ameva/AMEVA-WoL/docs/telegram_setup_guide.html) 또는 `termux/start-ameva-wol.sh` 파일 주석을 참고하세요.
+### Termux / Android Boot Setup
+Refer to `termux/start-ameva-wol.sh` for boot initialization details.
+
+### Systemd Service Configuration
+Service templates are provided under `systemd/`:
+- User service: `systemd/ameva-wol-user.service`
+- System service: `systemd/ameva-wol.service`
 
 ---
 
-## 📄 라이선스 (License)
+## Testing
 
-본 프로젝트는 **MIT License**를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참고하세요.
+Run unit tests via `pytest`:
+```bash
+pytest -q
+pytest --cov=ameva_wol --cov-report=term-missing
+```
+
+---
+
+## License
+
+MIT License. Refer to [LICENSE](LICENSE) for terms.

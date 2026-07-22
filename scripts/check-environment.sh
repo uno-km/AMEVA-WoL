@@ -55,7 +55,7 @@ REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_DIR}" || exit 1
 
 echo -e "${BOLD}${BLUE}==============================================================${NC}"
-echo -e "${BOLD}${BLUE}   ⚡ AMEVA-WoL Environment & Setup Diagnostic Auditor ⚡${NC}"
+echo -e "${BOLD}${BLUE}   AMEVA-WoL Environment & Setup Diagnostic Auditor          ${NC}"
 echo -e "${BOLD}${BLUE}==============================================================${NC}"
 log_info "Repository Path: ${REPO_DIR}"
 log_info "Audit Timestamp: $(date -u)"
@@ -132,7 +132,6 @@ VENV_ACT="false"
 if [ -d "${REPO_DIR}/.venv" ]; then
     log_pass "Virtual environment directory (.venv) exists"
     if [ -f "${REPO_DIR}/.venv/bin/activate" ]; then
-        # Temporarily activate for package check
         source "${REPO_DIR}/.venv/bin/activate"
         PYTHON_BIN="python"
         VENV_ACT="true"
@@ -143,7 +142,6 @@ fi
 
 # Check Python libraries
 if [ -n "${PYTHON_BIN}" ]; then
-    # Check python-telegram-bot
     if ${PYTHON_BIN} -c "import telegram" >/dev/null 2>&1; then
         TG_VER="$(${PYTHON_BIN} -c 'import telegram; print(getattr(telegram, "__version__", "Unknown"))')"
         log_pass "python-telegram-bot library installed (v${TG_VER})"
@@ -151,14 +149,12 @@ if [ -n "${PYTHON_BIN}" ]; then
         log_fail "python-telegram-bot library is missing" "Install dependencies: 'pip install -r requirements.txt'."
     fi
 
-    # Check python-dotenv
     if ${PYTHON_BIN} -c "import dotenv" >/dev/null 2>&1; then
         log_pass "python-dotenv library installed"
     else
         log_fail "python-dotenv library is missing" "Install dependencies: 'pip install -r requirements.txt'."
     fi
 
-    # Check ameva_wol internal package
     if PYTHONPATH="${REPO_DIR}/src" ${PYTHON_BIN} -c "import ameva_wol" >/dev/null 2>&1; then
         log_pass "AMEVA-WoL package importable (src/ameva_wol)"
     else
@@ -178,7 +174,6 @@ if [ ! -f "${ENV_FILE}" ]; then
 else
     log_pass ".env file exists"
 
-    # Check file permissions on POSIX
     PERM="$(stat -c "%a" "${ENV_FILE}" 2>/dev/null || stat -f "%A" "${ENV_FILE}" 2>/dev/null || echo "unknown")"
     if [ "${PERM}" = "600" ] || [ "${PERM}" = "400" ]; then
         log_pass ".env file permissions are secure (${PERM})"
@@ -186,7 +181,6 @@ else
         log_warn ".env file permissions are insecure (${PERM})" "Restrict permissions: 'chmod 600 .env'."
     fi
 
-    # Parse and validate contents
     TOKEN="$(grep -E '^TELEGRAM_BOT_TOKEN=' "${ENV_FILE}" | cut -d '=' -f2- | tr -d ' "\'')"
     USER_IDS="$(grep -E '^ALLOWED_USER_IDS=' "${ENV_FILE}" | cut -d '=' -f2- | tr -d ' "\'')"
     DATA_DIR_CFG="$(grep -E '^DATA_DIR=' "${ENV_FILE}" | cut -d '=' -f2- | tr -d ' "\'')"
@@ -203,7 +197,6 @@ else
     if [ -z "${USER_IDS}" ] || [ "${USER_IDS}" = "123456789,987654321" ]; then
         log_fail "ALLOWED_USER_IDS is missing or using default example values" "Open .env and insert your real numeric Telegram User ID from @userinfobot."
     else
-        # Verify numeric format
         VALID_USER_IDS="true"
         IFS=',' read -ra ADDR <<< "${USER_IDS}"
         for id_item in "${ADDR[@]}"; do
@@ -280,7 +273,7 @@ fi
 # ------------------------------------------------------------------------------
 echo ""
 echo -e "${BOLD}${BLUE}==============================================================${NC}"
-echo -e "${BOLD}${BLUE}                  📊 AUDIT SUMMARY REPORT                     ${NC}"
+echo -e "${BOLD}${BLUE}                  AUDIT SUMMARY REPORT                        ${NC}"
 echo -e "${BOLD}${BLUE}==============================================================${NC}"
 echo -e "  Passed Checks: ${GREEN}${PASS_COUNT}${NC}"
 echo -e "  Warnings:      ${YELLOW}${WARN_COUNT}${NC}"
@@ -288,7 +281,7 @@ echo -e "  Failed Checks: ${RED}${FAIL_COUNT}${NC}"
 echo ""
 
 if [ ${#HEURISTIC_FIXES[@]} -gt 0 ]; then
-    echo -e "${BOLD}${YELLOW}🔧 HEURISTIC TROUBLESHOOTING & ACTION REQUIRED:${NC}"
+    echo -e "${BOLD}${YELLOW}HEURISTIC TROUBLESHOOTING & ACTION REQUIRED:${NC}"
     echo -e "--------------------------------------------------------------"
     for fix in "${HEURISTIC_FIXES[@]}"; do
         echo -e "${fix}"
@@ -298,12 +291,12 @@ if [ ${#HEURISTIC_FIXES[@]} -gt 0 ]; then
 fi
 
 if [ "${FAIL_COUNT}" -eq 0 ]; then
-    echo -e "${BOLD}${GREEN}🎉 SYSTEM STATUS: READY TO RUN!${NC}"
+    echo -e "${BOLD}${GREEN}SYSTEM STATUS: READY TO RUN${NC}"
     echo -e "Run default mode:   ${CYAN}python -m ameva_wol${NC}"
     echo -e "Run Always-On mode: ${CYAN}python -m ameva_wol --always-on 5${NC}"
     exit 0
 else
-    echo -e "${BOLD}${RED}❌ SYSTEM STATUS: AUDIT FAILED (${FAIL_COUNT} critical error(s))${NC}"
+    echo -e "${BOLD}${RED}SYSTEM STATUS: AUDIT FAILED (${FAIL_COUNT} critical error(s))${NC}"
     echo -e "Please apply the heuristic fixes above before launching AMEVA-WoL."
     exit 1
 fi

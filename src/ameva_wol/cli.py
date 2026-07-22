@@ -77,13 +77,13 @@ async def run_check_config() -> int:
         except Exception:
             pass
 
-    print("🔍 AMEVA-WoL Configuration & Environment Check")
+    print("AMEVA-WoL Configuration & Environment Check")
     print("=" * 50)
 
     # 1. Load Configuration
     try:
         cfg = Config.load()
-        print("✅ Environment Configuration: VALID")
+        print("[OK] Environment Configuration: VALID")
         redacted_token = redact_secrets(cfg.telegram_bot_token, token=cfg.telegram_bot_token)
         print(f"   • Bot Token: {redacted_token[:10]}... [Redacted]")
         print(f"   • Allowed User IDs: {sorted(list(cfg.allowed_user_ids))}")
@@ -93,10 +93,10 @@ async def run_check_config() -> int:
         print(f"   • Log Level: {cfg.log_level}")
         print(f"   • Data Directory: {cfg.data_dir}")
     except ConfigurationError as err:
-        print(f"❌ Environment Configuration ERROR: {err}")
+        print(f"[FAIL] Environment Configuration ERROR: {err}")
         return 1
     except Exception as err:
-        print(f"❌ Unexpected Error Loading Config: {err}")
+        print(f"[FAIL] Unexpected Error Loading Config: {err}")
         return 1
 
     # 2. Data Directory & Locking Check
@@ -104,27 +104,27 @@ async def run_check_config() -> int:
         lock = InstanceLock(cfg.data_dir)
         lock.acquire()
         lock.release()
-        print("✅ Data Directory & Instance Lock: OK")
+        print("[OK] Data Directory & Instance Lock: OK")
     except InstanceLockError as err:
-        print(f"❌ Instance Lock Check ERROR: {err}")
+        print(f"[FAIL] Instance Lock Check ERROR: {err}")
         return 1
     except Exception as err:
-        print(f"❌ Data Directory Permission ERROR: {err}")
+        print(f"[FAIL] Data Directory Permission ERROR: {err}")
         return 1
 
     # 3. Registry JSON Check
     try:
         registry = DeviceRegistry(cfg.data_dir)
         devices = await registry.get_all()
-        print(f"✅ Device Registry: OK ({len(devices)} device(s) registered)")
+        print(f"[OK] Device Registry: OK ({len(devices)} device(s) registered)")
         for alias, dev in devices.items():
             print(f"   • `{alias}` -> MAC: {dev.mac}, IP: {dev.ip or 'None'}, Broadcast: {dev.broadcast}:{dev.port}")
     except Exception as err:
-        print(f"❌ Device Registry Read ERROR: {err}")
+        print(f"[FAIL] Device Registry Read ERROR: {err}")
         return 1
 
     print("=" * 50)
-    print("🎉 All diagnostic checks passed successfully!")
+    print("All diagnostic checks passed successfully.")
     return 0
 
 

@@ -95,7 +95,7 @@ async def main_async(always_on: bool = False, interval_minutes: int = 5) -> int:
             scheduler.start()
             logger.info(f"Always-On scheduler active (Interval: {interval_minutes} minutes).")
 
-        print(f"🚀 AMEVA-WoL Gateway running in {'Always-On' if always_on else 'Default'} mode. Press Ctrl+C to exit.")
+        print(f"AMEVA-WoL Gateway running in {'Always-On' if always_on else 'Default'} mode. Press Ctrl+C to exit.")
 
         # Wait for shutdown signal
         await stop_event.wait()

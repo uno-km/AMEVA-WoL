@@ -85,16 +85,16 @@ class CommandDispatcher:
             return
 
         msg = (
-            "⚡ **AMEVA-WoL Gateway** ⚡\n\n"
-            "Status: ✅ Authorized & Operational\n\n"
-            "**Quick Command Summary:**\n"
-            "• `/wake [alias|all]` - Send Wake-on-LAN packet\n"
-            "• `/status [alias|all]` - Check reachability ping\n"
-            "• `/list` - List registered devices\n"
-            "• `/add` - Register a new device\n"
-            "• `/remove <alias>` - Delete registered device\n"
-            "• `/id` - View your Telegram User & Chat ID\n"
-            "• `/how` - Comprehensive manual & documentation\n"
+            "[AMEVA-WoL Gateway]\n\n"
+            "Status: Authorized & Operational\n\n"
+            "Command Summary:\n"
+            "• /wake [alias|all] - Send Wake-on-LAN packet\n"
+            "• /status [alias|all] - Check reachability ping\n"
+            "• /list - List registered devices\n"
+            "• /add - Register a new device\n"
+            "• /remove <alias> - Delete registered device\n"
+            "• /id - View your Telegram User & Chat ID\n"
+            "• /how - Comprehensive manual & documentation\n"
         )
         await self._reply_safe(update, msg)
 
