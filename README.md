@@ -31,32 +31,30 @@ For step-by-step bot creation, user authorization setup, and host configuration,
 
 ```mermaid
 flowchart TD
-    subgraph Telegram Cloud
-        TG[Telegram API]
+    A[Telegram Cloud API]
+
+    subgraph Gateway ["Local Gateway Node (Termux / Linux)"]
+        direction TB
+        B[AMEVA-WoL Core Engine]
+        C[(devices.json Registry)]
+        D[Always-On Scheduler]
+        
+        B <--> C
+        B --- D
     end
 
-    subgraph Local Area Network
-        subgraph Gateway Node
-            BOT[AMEVA-WoL Core]
-            REG[(devices.json)]
-            LOCK[Instance Lock]
-            SCHED[Always-On Scheduler]
-        end
-
-        subgraph TARGET_SYSTEMS [Target Systems]
-            PC1[Workstation PC]
-            PC2[Server Node]
-            NAS[Storage Appliance]
-        end
+    subgraph Targets ["Target Systems (LAN)"]
+        direction TB
+        E[Workstation PC]
+        F[Server Node]
+        G[Storage Appliance]
     end
 
-    TG <-->|HTTPS Long Polling| BOT
-    BOT <--> REG
-    BOT --- LOCK
-    SCHED -->|ICMP Reachability Check| TARGET_SYSTEMS
-    BOT -->|UDP Magic Packet Broadcast| PC1
-    BOT -->|UDP Magic Packet Broadcast| PC2
-    BOT -->|UDP Magic Packet Broadcast| NAS
+    A <-->|HTTPS Long Polling (No inbound ports)| B
+    D -.->|ICMP Reachability Ping| Targets
+    B ==>|UDP Magic Packet Broadcast| E
+    B ==>|UDP Magic Packet Broadcast| F
+    B ==>|UDP Magic Packet Broadcast| G
 ```
 
 ---
