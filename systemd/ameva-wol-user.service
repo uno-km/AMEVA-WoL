@@ -1,0 +1,20 @@
+[Unit]
+Description=AMEVA-WoL Gateway (Systemd User Service)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/AMEVA-WoL
+EnvironmentFile=%h/AMEVA-WoL/.env
+ExecStart=%h/AMEVA-WoL/.venv/bin/python -m ameva_wol --always-on 5
+Restart=on-failure
+RestartSec=10s
+
+# Security Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=default.target

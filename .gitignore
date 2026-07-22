@@ -1,0 +1,54 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Persistent data directory and database
+data/
+devices.json
+*.json.tmp
+
+# Logs and runtime locks
+*.log
+logs/
+*.pid
+*.lock
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest and Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Type checking and linting caches
+.mypy_cache/
+.ruff_cache/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Build and distribution artifacts
+dist/
+build/
+*.egg-info/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Termux runtime artifacts
+*.log.*

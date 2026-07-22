@@ -1,0 +1,28 @@
+[Unit]
+Description=AMEVA-WoL Gateway (System-wide Service)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ameva-wol
+Group=ameva-wol
+WorkingDirectory=/opt/AMEVA-WoL
+EnvironmentFile=/opt/AMEVA-WoL/.env
+ExecStart=/opt/AMEVA-WoL/.venv/bin/python -m ameva_wol --always-on 5
+Restart=on-failure
+RestartSec=10s
+
+# Hardening Directives
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/AMEVA-WoL/data /opt/AMEVA-WoL/logs
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
