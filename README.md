@@ -50,7 +50,7 @@ flowchart TD
         G[Storage Appliance]
     end
 
-    A <-->|HTTPS Long Polling (No inbound ports)| B
+    A <-->|HTTPS Long Polling| B
     D -.->|ICMP Reachability Ping| Targets
     B ==>|UDP Magic Packet Broadcast| E
     B ==>|UDP Magic Packet Broadcast| F
