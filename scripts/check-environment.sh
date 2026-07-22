@@ -137,7 +137,11 @@ if [ -d "${REPO_DIR}/.venv" ]; then
         VENV_ACT="true"
     fi
 else
-    log_warn "Virtual environment (.venv) not found in repository root" "Create virtual environment: '${PYTHON_BIN:-python3} -m venv .venv && source .venv/bin/activate'."
+    VENV_FIX_MSG="Create virtual environment & install requirements:\n"
+    VENV_FIX_MSG="${VENV_FIX_MSG}      1) Create venv: 'python3 -m venv .venv'\n"
+    VENV_FIX_MSG="${VENV_FIX_MSG}      2) Activate:    'source .venv/bin/activate'\n"
+    VENV_FIX_MSG="${VENV_FIX_MSG}      3) Install:     'pip install -r requirements.txt'"
+    log_warn "Virtual environment (.venv) not found in repository root" "${VENV_FIX_MSG}"
 fi
 
 # Check Python libraries
@@ -169,8 +173,19 @@ echo ""
 echo -e "${BOLD}5. .env Configuration Audit${NC}"
 
 ENV_FILE="${REPO_DIR}/.env"
+ENV_MANUAL="1) Copy example file: 'cp .env.example .env'\n"
+ENV_MANUAL="${ENV_MANUAL}   2) Edit .env and configure the following required variables:\n"
+ENV_MANUAL="${ENV_MANUAL}      --------------------------------------------------------\n"
+ENV_MANUAL="${ENV_MANUAL}      TELEGRAM_BOT_TOKEN=123456789:ABCdef... (From @BotFather)\n"
+ENV_MANUAL="${ENV_MANUAL}      ALLOWED_USER_IDS=123456789              (From @userinfobot)\n"
+ENV_MANUAL="${ENV_MANUAL}      DEFAULT_BROADCAST=192.168.0.255         (Subnet Broadcast)\n"
+ENV_MANUAL="${ENV_MANUAL}      DEFAULT_WOL_PORT=9                      (UDP Port)\n"
+ENV_MANUAL="${ENV_MANUAL}      LOG_LEVEL=INFO                          (Logging Level)\n"
+ENV_MANUAL="${ENV_MANUAL}      DATA_DIR=./data                         (Storage Path)\n"
+ENV_MANUAL="${ENV_MANUAL}      --------------------------------------------------------"
+
 if [ ! -f "${ENV_FILE}" ]; then
-    log_fail ".env file missing in repository root" "Copy example file: 'cp .env.example .env' and edit secrets."
+    log_fail ".env file missing in repository root" "${ENV_MANUAL}"
 else
     log_pass ".env file exists"
 

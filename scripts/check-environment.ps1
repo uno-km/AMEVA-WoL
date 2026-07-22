@@ -127,7 +127,11 @@ if (Test-Path $VenvDir) {
         $PythonCmd = $VenvPy
     }
 } else {
-    Log-Warn -msg "Virtual environment (.venv) not found in repository root" -fix "Create virtual environment: 'python -m venv .venv' and run '.venv\Scripts\activate'."
+    $VenvFixMsg = "Create virtual environment & install requirements:`n" + `
+                  "      1) Create venv: 'python -m venv .venv'`n" + `
+                  "      2) Activate:    '.venv\Scripts\activate'`n" + `
+                  "      3) Install:     'pip install -r requirements.txt'"
+    Log-Warn -msg "Virtual environment (.venv) not found in repository root" -fix $VenvFixMsg
 }
 
 if ($PythonCmd) {
@@ -168,8 +172,19 @@ Write-Host "5. .env Configuration Audit" -ForegroundColor White
 $EnvFile = Join-Path $RepoDir ".env"
 $DataDirCfg = "./data"
 
+$EnvManual = "1) Copy example file: 'Copy-Item .env.example .env'`n" + `
+             "   2) Open .env (e.g. 'notepad .env') and configure required parameters:`n" + `
+             "      --------------------------------------------------------`n" + `
+             "      TELEGRAM_BOT_TOKEN=123456789:ABCdef... (From @BotFather)`n" + `
+             "      ALLOWED_USER_IDS=123456789              (From @userinfobot)`n" + `
+             "      DEFAULT_BROADCAST=192.168.0.255         (Subnet Broadcast)`n" + `
+             "      DEFAULT_WOL_PORT=9                      (UDP Port)`n" + `
+             "      LOG_LEVEL=INFO                          (Logging Level)`n" + `
+             "      DATA_DIR=./data                         (Storage Path)`n" + `
+             "      --------------------------------------------------------"
+
 if (-not (Test-Path $EnvFile)) {
-    Log-Fail -msg ".env file missing in repository root" -fix "Copy example file: 'Copy-Item .env.example .env' and edit secrets."
+    Log-Fail -msg ".env file missing in repository root" -fix $EnvManual
 } else {
     Log-Pass ".env file exists"
 
