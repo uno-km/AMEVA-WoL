@@ -39,7 +39,22 @@
 
 ---
 
-## 4. AMEVA-WoL 환경설정 및 실행 🚀
+## 4. AMEVA-WoL A-Z 자동 진단 스크립트 실행 🔍
+
+AMEVA-WoL은 운영 체제, 파이썬 버전, 라이브러리 설치 상태, `.env` 토큰 유효성, User ID 숫자 검증, 네트워크 핑, 데이터 폴더 권한까지 **A부터 Z까지 자동으로 전수 점검**하고, 문제가 있는 항목마다 즉시 조치할 수 있는 해결 방법(Heuristic Fix)을 출력해주는 진단 스크립트를 제공합니다.
+
+- **Termux / Linux (쉘 스크립트)**:
+  ```bash
+  bash scripts/check-environment.sh
+  ```
+- **Windows (파워쉘 스크립트)**:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File .\scripts\check-environment.ps1
+  ```
+
+---
+
+## 5. AMEVA-WoL 환경설정 및 실행 🚀
 
 ### 1) `.env` 파일 작성
 `AMEVA-WoL` 폴더 안에 `.env` 파일을 작성합니다:

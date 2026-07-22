@@ -290,32 +290,21 @@
     <div class="step-card" id="step4">
       <div class="step-header">
         <div class="step-number">4</div>
-        <div class="step-title">AMEVA-WoL 설정 및 실행하기</div>
+        <div class="step-title">환경 자가 진단 스크립트 실행 (A-Z 자동 점검)</div>
       </div>
       <div class="step-content">
-        <p>1단계에서 구한 <strong>봇 토큰</strong>과 3단계에서 구한 <strong>User ID</strong>를 설정 파일에 입력합니다.</p>
+        <p>AMEVA-WoL은 실행에 필요한 모든 설치 요소(파이썬, 라이브러리, .env 토큰, User ID, 네트워크, 데이터 폴더)를 A부터 Z까지 자동으로 전수 점검하고 부족한 항목에 대한 해결책을 조언해주는 <strong>진단 스크립트</strong>를 제공합니다.</p>
         
-        <p><strong>1) 환경 설정 파일(.env) 작성</strong></p>
-        <p>프로젝트 폴더 안에 <code>.env</code> 파일을 만들고 아래와 같이 작성합니다:</p>
-        <pre><code>TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_ExampleToken
-ALLOWED_USER_IDS=123456789
-DEFAULT_BROADCAST=192.168.0.255
-DEFAULT_WOL_PORT=9
-LOG_LEVEL=INFO
-DATA_DIR=./data</code></pre>
+        <p><strong>• Termux / Linux (쉘 스크립트)</strong>:</p>
+        <pre><code>bash scripts/check-environment.sh</code></pre>
 
-        <p><strong>2) 진단 명령어로 설정 정상 여부 확인</strong></p>
-        <pre><code>python -m ameva_wol --check-config</code></pre>
+        <p><strong>• Windows (파워쉘 스크립트)</strong>:</p>
+        <pre><code>powershell -ExecutionPolicy Bypass -File .\scripts\check-environment.ps1</code></pre>
 
-        <p><strong>3) AMEVA-WoL 실행하기</strong></p>
-        <ul>
-          <li><strong>기본 대기 모드 (명령어 대기)</strong>:
-            <pre><code>python -m ameva_wol</code></pre>
-          </li>
-          <li><strong>Always-On 상시 감시 모드 (5분마다 컴퓨터 켜짐 상태 체크 후 꺼졌으면 자동으로 WoL 전송)</strong>:
-            <pre><code>python -m ameva_wol --always-on 5</code></pre>
-          </li>
-        </ul>
+        <div class="tip-box">
+          <strong>💡 진단 결과 리포트 예시:</strong><br>
+          만약 .env 파일이나 패키지가 빠져있다면 <code>[FAIL] .env file missing -> FIX: Copy-Item .env.example .env</code>와 같이 즉시 해결 가능한 방법(Heuristic Fix)을 친절하게 알려줍니다.
+        </div>
       </div>
     </div>
 

@@ -71,8 +71,15 @@ LOG_LEVEL=INFO
 DATA_DIR=./data
 ```
 
-### 3. 자가 진단 실행
+### 3. A-Z 시스템 자가 진단 스크립트 실행 (System Audit)
+
+AMEVA-WoL에 포함된 진단 스크립트를 실행하면 Python 버전, 라이브러리, `.env` 토큰 유효성, User ID, 데이터 디렉토리 권한, 네트워크 연결을 A부터 Z까지 점검하고 부족한 항목의 해결 방법(Heuristic Fix)을 자동으로 안내합니다:
+
+- **Termux / Linux**: `bash scripts/check-environment.sh`
+- **Windows**: `powershell -ExecutionPolicy Bypass -File .\scripts\check-environment.ps1`
+
 ```bash
+# Python 내장 자가 진단도 지원됩니다:
 python -m ameva_wol --check-config
 ```
 
