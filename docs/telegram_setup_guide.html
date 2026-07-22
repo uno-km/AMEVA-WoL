@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMEVA-WoL 텔레그램 봇 셋팅 및 사용 가이드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-purple: #818cf8;
+      --accent-green: #34d399;
+      --accent-yellow: #fbbf24;
+      --accent-rose: #fb7185;
+      --code-bg: #090d16;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.7;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 15px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .nav-badges {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: #1e293b;
+      color: var(--accent-cyan);
+      border: 1px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .badge:hover {
+      background: var(--accent-cyan);
+      color: #0f172a;
+    }
+
+    .step-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease;
+    }
+
+    .step-card:hover {
+      border-color: var(--accent-purple);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 15px;
+    }
+
+    .step-number {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .step-content {
+      color: var(--text-muted);
+    }
+
+    .step-content p {
+      margin-bottom: 12px;
+      font-size: 1rem;
+      color: #cbd5e1;
+    }
+
+    .step-content ol, .step-content ul {
+      margin-left: 25px;
+      margin-bottom: 15px;
+    }
+
+    .step-content li {
+      margin-bottom: 8px;
+    }
+
+    .highlight {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .warning-box {
+      background-color: rgba(251, 113, 133, 0.1);
+      border-left: 4px solid var(--accent-rose);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      color: #fecdd3;
+    }
+
+    .tip-box {
+      background-color: rgba(52, 211, 153, 0.1);
+      border-left: 4px solid var(--accent-green);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      color: #a7f3d0;
+    }
+
+    code {
+      font-family: 'Fira Code', Consolas, Monaco, monospace;
+      background-color: var(--code-bg);
+      color: var(--accent-cyan);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      border: 1px solid #1e293b;
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 15px;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #e2e8f0;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AMEVA-WoL 초보자 완벽 가이드</h1>
+      <p>텔레그램 앱 설치부터 봇 생성, User ID 확인, 실행 방법까지 쉽게 배우기</p>
+      <div class="nav-badges">
+        <a href="#step1" class="badge">1. 텔레그램 설치</a>
+        <a href="#step2" class="badge">2. 봇 생성 (BotFather)</a>
+        <a href="#step3" class="badge">3. 내 User ID 확인</a>
+        <a href="#step4" class="badge">4. AMEVA-WoL 설정 & 실행</a>
+        <a href="#step5" class="badge">5. 텔레그램 명령 사용법</a>
+      </div>
+    </header>
+
+    <!-- Step 1 -->
+    <div class="step-card" id="step1">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">텔레그램(Telegram) 앱 설치하기</div>
+      </div>
+      <div class="step-content">
+        <p>텔레그램은 컴퓨터 및 스마트폰에서 안전하게 제어 명령을 보낼 수 있는 무료 메신저입니다.</p>
+        <ul>
+          <li><strong>스마트폰 (Android / iPhone)</strong>: Google Play 스토어 또는 Apple App Store에서 <span class="highlight">Telegram</span>을 검색하여 설치합니다.</li>
+          <li><strong>PC (Windows / Mac / Linux)</strong>: 공식 홈페이지(<a href="https://desktop.telegram.org" target="_blank" style="color: var(--accent-cyan);">desktop.telegram.org</a>)에서 PC용 텔레그램을 다운로드하여 설치합니다.</li>
+        </ul>
+        <p>앱을 켠 후 본인의 전화번호로 회원가입 및 인식을 완료하세요.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card" id="step2">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">@BotFather로 나만의 텔레그램 봇 만들기</div>
+      </div>
+      <div class="step-content">
+        <p>텔레그램의 공식 봇 관리 계정인 <span class="highlight">@BotFather</span>를 이용하여 나만의 봇을 발급받습니다.</p>
+        <ol>
+          <li>텔레그램 상단 검색창에 <code>@BotFather</code>를 검색하고 파란색 인증 마크가 있는 계정을 선택합니다.</li>
+          <li>채팅방에 <code>/newbot</code> 명령어를 입력하고 전송합니다.</li>
+          <li><strong>봇의 이름(Name)</strong>을 입력하라는 안내가 나오면 원하는 이름을 입력합니다. (예: <code>My Home WoL</code>)</li>
+          <li><strong>봇의 아이디(Username)</strong>를 입력하라는 안내가 나오면 반드시 끝이 <code>bot</code>으로 끝나는 아이디를 입력합니다. (예: <code>my_home_wol_bot</code>)</li>
+          <li>생성이 완료되면 <strong>API Token (토큰)</strong>이 발급됩니다.</li>
+        </ol>
+
+        <div class="warning-box">
+          <strong>⚠️ 중요 보안주의!</strong><br>
+          발급받은 봇 토큰(API Token)은 비밀번호와 같습니다! 절대로 타인에게 공유하거나 인터넷에 올리지 마세요.
+        </div>
+
+        <p>발급된 토큰 예시: <code>123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_ExampleToken</code></p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card" id="step3">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">내 텔레그램 User ID (숫자 ID) 확인하기</div>
+      </div>
+      <div class="step-content">
+        <p>아무나 내 봇 조종을 못하게 막기 위해 <strong>본인의 숫자 User ID</strong>를 확인하여 허용 목록에 등록해야 합니다.</p>
+        <ol>
+          <li>텔레그램 검색창에 <code>@userinfobot</code> 또는 <code>@raw_data_bot</code>을 검색합니다.</li>
+          <li>해당 봇과의 대화창에 <code>/start</code>를 전송합니다.</li>
+          <li>봇이 응답으로 알려주는 <strong>Id: 123456789</strong> 형태의 숫자를 복사합니다.</li>
+        </ol>
+
+        <div class="tip-box">
+          <strong>💡 팁:</strong> 봇 생성 후 AMEVA-WoL을 실행한 뒤 본인 봇 채팅방에서 <code>/id</code> 명령어를 전송해도 확인 가능합니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card" id="step4">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">AMEVA-WoL 설정 및 실행하기</div>
+      </div>
+      <div class="step-content">
+        <p>1단계에서 구한 <strong>봇 토큰</strong>과 3단계에서 구한 <strong>User ID</strong>를 설정 파일에 입력합니다.</p>
+        
+        <p><strong>1) 환경 설정 파일(.env) 작성</strong></p>
+        <p>프로젝트 폴더 안에 <code>.env</code> 파일을 만들고 아래와 같이 작성합니다:</p>
+        <pre><code>TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_ExampleToken
+ALLOWED_USER_IDS=123456789
+DEFAULT_BROADCAST=192.168.0.255
+DEFAULT_WOL_PORT=9
+LOG_LEVEL=INFO
+DATA_DIR=./data</code></pre>
+
+        <p><strong>2) 진단 명령어로 설정 정상 여부 확인</strong></p>
+        <pre><code>python -m ameva_wol --check-config</code></pre>
+
+        <p><strong>3) AMEVA-WoL 실행하기</strong></p>
+        <ul>
+          <li><strong>기본 대기 모드 (명령어 대기)</strong>:
+            <pre><code>python -m ameva_wol</code></pre>
+          </li>
+          <li><strong>Always-On 상시 감시 모드 (5분마다 컴퓨터 켜짐 상태 체크 후 꺼졌으면 자동으로 WoL 전송)</strong>:
+            <pre><code>python -m ameva_wol --always-on 5</code></pre>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-card" id="step5">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">텔레그램 봇으로 컴퓨터 제어하기</div>
+      </div>
+      <div class="step-content">
+        <p>내가 만든 텔레그램 봇 채팅방에 들어가서 아래 명령어들을 입력합니다.</p>
+
+        <p><strong>1) 내 컴퓨터 등록하기 (/add)</strong></p>
+        <pre><code>/add desktop AA:BB:CC:DD:EE:01 192.168.0.100</code></pre>
+        <ul>
+          <li><code>desktop</code>: 내가 부를 이름 (알리프)</li>
+          <li><code>AA:BB:CC:DD:EE:01</code>: 랜카드 MAC 주소</li>
+          <li><code>192.168.0.100</code>: 컴퓨터 내부 IP 주소</li>
+        </ul>
+
+        <p><strong>2) 컴퓨터 켜기 (/wake)</strong></p>
+        <pre><code>/wake desktop</code></pre>
+        <p>등록된 모든 컴퓨터를 켜려면: <code>/wake all</code></p>
+
+        <p><strong>3) 컴퓨터 켜짐/꺼짐 상태 확인 (/status)</strong></p>
+        <pre><code>/status desktop</code></pre>
+
+        <p><strong>4) 등록된 목록 보기 (/list)</strong></p>
+        <pre><code>/list</code></pre>
+      </div>
+    </div>
+
+    <footer>
+      <p>AMEVA-WoL Project &copy; 2026. Made with ❤️ for Termux & Linux Deployment.</p>
+    </footer>
+  </div>
+</body>
+</html>
