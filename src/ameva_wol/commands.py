@@ -23,6 +23,7 @@ from ameva_wol.security import (
 )
 from ameva_wol.utils import parse_telegram_command, split_message
 from ameva_wol.wol import send_magic_packet
+from ameva_wol.sysinfo import collect_sysinfo, run_speedtest_sync
 
 logger = logging.getLogger("ameva_wol.commands")
 
@@ -94,6 +95,7 @@ class CommandDispatcher:
             "• /add - Register a new device\n"
             "• /remove <alias> - Delete registered device\n"
             "• /id - View your Telegram User & Chat ID\n"
+            "• /host - View detailed gateway system information\n"
             "• /how - Comprehensive manual & documentation\n"
         )
         await self._reply_safe(update, msg)
@@ -463,6 +465,32 @@ class CommandDispatcher:
         except Exception as err:
             logger.error(f"Error removing device '{target_alias}': {err}", exc_info=True)
             await self._reply_safe(update, f"❌ Failed to remove device: {err}")
+
+    async def handle_host(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """/host command handler to display system info."""
+        if not await self._check_auth_and_rate_limit(update):
+            return
+
+        if not update.effective_message:
+            return
+
+        # 1. Send initial report without speedtest (fast)
+        initial_report = await collect_sysinfo(include_speedtest=False)
+        msg_obj = await update.effective_message.reply_text(initial_report)
+
+        # 2. Run speedtest in background thread
+        try:
+            loop = asyncio.get_running_loop()
+            with ThreadPoolExecutor() as pool:
+                speed_result = await loop.run_in_executor(pool, run_speedtest_sync)
+            
+            # 3. Re-generate report with speedtest results and edit the message
+            final_report = initial_report.replace("`⏳ Measuring...`", f"`{speed_result}`")
+            await msg_obj.edit_text(final_report)
+        except Exception as e:
+            logger.error(f"Error running speedtest: {e}")
+            final_report = initial_report.replace("`⏳ Measuring...`", f"`Failed: {e}`")
+            await msg_obj.edit_text(final_report)
 
     async def handle_unknown(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handler for unrecognized commands."""

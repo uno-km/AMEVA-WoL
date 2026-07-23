@@ -64,6 +64,7 @@ def create_telegram_app(config: Config, registry: DeviceRegistry) -> Application
     app.add_handler(CommandHandler("status", dispatcher.handle_status))
     app.add_handler(CommandHandler("list", dispatcher.handle_list))
     app.add_handler(CommandHandler("remove", dispatcher.handle_remove))
+    app.add_handler(CommandHandler("host", dispatcher.handle_host))
 
     # Catch-all handler for unknown commands
     app.add_handler(MessageHandler(filters.COMMAND, dispatcher.handle_unknown))

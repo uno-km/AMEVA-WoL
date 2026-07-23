@@ -61,7 +61,49 @@ flowchart TD
 
 ## Quick Start
 
-### 1. Installation
+### 📱 1. Termux (Android) 왕초보 가이드 (복사&붙여넣기)
+
+**1단계: 터뮤즈 패키지 설치 및 소스코드 다운로드**
+터뮤즈를 실행하고 아래 코드를 통째로 복사해서 붙여넣으세요.
+```bash
+pkg update -y && pkg upgrade -y
+pkg install python git -y
+
+git clone https://github.com/uno-km/AMEVA-WoL.git
+cd AMEVA-WoL
+
+python -m venv .venv
+source .venv/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+**2단계: 환경설정(.env) 파일 만들기**
+아래 상자 안의 `{여기에_봇_토큰_입력}`과 `{여기에_내_텔레그램_ID_입력}` 부분을 본인 정보로 바꾼 뒤, **전체 코드를 복사해서 터뮤즈에 붙여넣고 엔터**를 치세요.
+
+```bash
+cat << 'EOF' > .env
+TELEGRAM_BOT_TOKEN={여기에_봇_토큰_입력}
+ALLOWED_USER_IDS={여기에_내_텔레그램_ID_입력}
+DEFAULT_BROADCAST=192.168.0.255
+DEFAULT_WOL_PORT=9
+LOG_LEVEL=INFO
+DATA_DIR=./data
+EOF
+```
+*(봇 토큰과 ID를 모른다면 [Telegram Setup Guide](docs/telegram_setup_guide.md)를 참고하세요.)*
+
+**3단계: 봇 실행하기**
+```bash
+python -m ameva_wol
+```
+
+---
+
+### 💻 2. Windows / Linux 일반 설치 가이드
+
+**Installation**
 ```bash
 git clone https://github.com/uno-km/AMEVA-WoL.git
 cd AMEVA-WoL
@@ -73,7 +115,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 2. Configuration Setup
+**Configuration Setup**
 Create a `.env` configuration file in the repository root directory:
 ```env
 TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_ExampleToken
@@ -114,6 +156,7 @@ python -m ameva_wol --check-config
 | `/start` | `/start` | Display authorization status and command summary |
 | `/how` | `/how` | Display operational documentation and network constraints |
 | `/id` | `/id` | Display requesting Telegram User ID and Chat ID |
+| `/host` | `/host` | Retrieve detailed system info (CPU, RAM, GPS, Sensors, Network speed) |
 | `/add` | `/add [--overwrite] <alias> <mac> [ip] [broadcast] [port]` | Register or update target device entry |
 | `/wake` | `/wake [alias\|all]` | Transmit Magic Packet to specified target or all hosts |
 | `/status` | `/status [alias\|all]` | Execute ICMP reachability check (Does not send WoL) |
