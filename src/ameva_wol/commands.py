@@ -29,6 +29,7 @@ from ameva_wol.security import (
 from ameva_wol.utils import parse_telegram_command, split_message
 from ameva_wol.wol import send_magic_packet
 from ameva_wol.sysinfo import collect_sysinfo, run_speedtest_sync
+from ameva_wol.tapo_plug import TapoManager
 
 logger = logging.getLogger("ameva_wol.commands")
 
@@ -43,6 +44,7 @@ class CommandDispatcher:
             max_requests=config.rate_limit_commands,
             window_seconds=config.rate_limit_window_seconds,
         )
+        self.tapo = TapoManager(config.tapo_email, config.tapo_password, config.tapo_devices)
 
     async def _check_auth_and_rate_limit(self, update: Update) -> bool:
         """Enforce authorization and rate limiting on incoming update.
@@ -113,6 +115,7 @@ class CommandDispatcher:
             "Command Summary:\n"
             "• /wake [alias|all] - Send Wake-on-LAN packet\n"
             "• /status [alias|all] - Check reachability ping\n"
+            "• /power <on|off|re|status> [alias] - Control Tapo Smart Plug\n"
             "• /list - List registered devices\n"
             "• /add - Register a new device\n"
             "• /remove <alias> - Delete registered device\n"
@@ -659,6 +662,44 @@ class CommandDispatcher:
             
         except Exception as bug:
             await self._reply_safe(update, f"🐛 A bug ate the flowers: {str(bug)}")
+
+    async def handle_power(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """/power command handler to control Tapo smart plugs."""
+        if not await self._check_auth_and_rate_limit(update):
+            return
+
+        if not self.tapo.is_configured():
+            await self._reply_safe(update, "❌ Tapo Smart Plug is not configured in .env (TAPO_DEVICES, TAPO_EMAIL, TAPO_PASSWORD)")
+            return
+
+        text = (update.effective_message.text or "") if update.effective_message else ""
+        tokens = parse_telegram_command(text)
+        args = tokens[1:]
+
+        if not args:
+            await self._reply_safe(update, "ℹ️ Usage: `/power <on|off|re|status> [alias]`")
+            return
+            
+        action = args[0].lower()
+        alias = args[1].lower() if len(args) > 1 else None
+        
+        await self._reply_safe(update, f"⏳ Processing Tapo command `{action}`" + (f" for `{alias}`" if alias else "") + "...")
+        
+        try:
+            if action == "on":
+                msg = await self.tapo.turn_on(alias)
+            elif action == "off":
+                msg = await self.tapo.turn_off(alias)
+            elif action in ("re", "reboot"):
+                msg = await self.tapo.reboot(alias, delay_seconds=10)
+            elif action == "status":
+                msg = await self.tapo.get_status(alias)
+            else:
+                msg = "❌ Invalid action. Use: on, off, re, status"
+        except Exception as e:
+            msg = f"❌ Tapo Error: {e}"
+            
+        await self._reply_safe(update, msg)
 
     async def handle_unknown(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handler for unrecognized commands."""

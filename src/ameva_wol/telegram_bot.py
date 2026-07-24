@@ -61,6 +61,7 @@ def create_telegram_app(config: Config, registry: DeviceRegistry) -> Application
     app.add_handler(CommandHandler("id", dispatcher.handle_id))
     app.add_handler(CommandHandler("add", dispatcher.handle_add))
     app.add_handler(CommandHandler("wake", dispatcher.handle_wake))
+    app.add_handler(CommandHandler("power", dispatcher.handle_power))
     app.add_handler(CommandHandler("status", dispatcher.handle_status))
     app.add_handler(CommandHandler("list", dispatcher.handle_list))
     app.add_handler(CommandHandler("remove", dispatcher.handle_remove))

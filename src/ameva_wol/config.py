@@ -30,6 +30,10 @@ class Config:
     rate_limit_commands: int
     rate_limit_window_seconds: int
     telegram_poll_timeout_seconds: int
+    
+    tapo_email: Optional[str]
+    tapo_password: Optional[str]
+    tapo_devices: Dict[str, str]
 
     @classmethod
     def load(cls, env_path: Optional[Path] = None) -> "Config":
@@ -155,6 +159,23 @@ class Config:
         except ValueError:
             raise ConfigurationError("TELEGRAM_POLL_TIMEOUT_SECONDS must be an integer between 1 and 300.")
 
+        # 14. Tapo Config (Optional)
+        tapo_email = os.getenv("TAPO_EMAIL", "").strip() or None
+        tapo_password = os.getenv("TAPO_PASSWORD", "").strip() or None
+        
+        tapo_devices_str = os.getenv("TAPO_DEVICES", "").strip()
+        tapo_devices: Dict[str, str] = {}
+        if tapo_devices_str:
+            for item in tapo_devices_str.split(","):
+                item = item.strip()
+                if not item: continue
+                parts = item.split(":")
+                if len(parts) == 2:
+                    alias = parts[0].strip().lower()
+                    ip = parts[1].strip()
+                    if alias and ip:
+                        tapo_devices[alias] = ip
+
         return cls(
             telegram_bot_token=token,
             allowed_user_ids=allowed_user_ids,
@@ -169,4 +190,7 @@ class Config:
             rate_limit_commands=rate_limit_commands,
             rate_limit_window_seconds=rate_limit_window,
             telegram_poll_timeout_seconds=poll_timeout,
+            tapo_email=tapo_email,
+            tapo_password=tapo_password,
+            tapo_devices=tapo_devices,
         )
