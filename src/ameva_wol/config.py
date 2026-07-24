@@ -2,9 +2,9 @@
 
 import ipaddress
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 from dotenv import load_dotenv
 
@@ -31,9 +31,9 @@ class Config:
     rate_limit_window_seconds: int
     telegram_poll_timeout_seconds: int
     
-    tapo_email: Optional[str]
-    tapo_password: Optional[str]
-    tapo_devices: Dict[str, str]
+    tapo_email: Optional[str] = None
+    tapo_password: Optional[str] = None
+    tapo_devices: Dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def load(cls, env_path: Optional[Path] = None) -> "Config":
