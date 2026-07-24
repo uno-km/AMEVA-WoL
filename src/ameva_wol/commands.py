@@ -56,6 +56,14 @@ class CommandDispatcher:
         user_id = user.id if user else None
         chat_id = chat.id if chat else None
 
+        # --- Flashy Terminal Logging (Request) ---
+        import datetime
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        username = user.first_name if user else "Unknown"
+        req_text = update.effective_message.text if update.effective_message else "Action"
+        print(f"\n[\033[96m{now}\033[0m] \033[92m[REQUEST]\033[0m 👤 \033[93m{username}\033[0m: \033[94m{req_text}\033[0m")
+        # -----------------------------------------
+
         if not is_user_authorized(user_id, self.config.allowed_user_ids):
             logger.warning(f"Unauthorized command attempt from user_id={user_id}, chat_id={chat_id}")
             # Silently reject unauthorized requests to prevent device discovery
@@ -79,6 +87,15 @@ class CommandDispatcher:
         """Send message safely, redacting secrets and splitting long text if necessary."""
         if not update.effective_message:
             return
+            
+        # --- Flashy Terminal Logging (Reply) ---
+        import datetime
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        preview = text.replace('\n', ' ')
+        if len(preview) > 60:
+            preview = preview[:60] + "..."
+        print(f"[\033[96m{now}\033[0m] \033[95m[REPLY]\033[0m 💬 \033[97m{preview}\033[0m")
+        # ---------------------------------------
         
         sanitized = redact_secrets(text, token=self.config.telegram_bot_token)
         chunks = split_message(sanitized, max_length=4000)
@@ -295,6 +312,9 @@ class CommandDispatcher:
                     delay_ms=self.config.default_wol_delay_ms,
                 )
                 if res["success"]:
+                    import datetime
+                    now_str = datetime.datetime.now().strftime("%H:%M:%S")
+                    print(f"[\033[96m{now_str}\033[0m] \033[41m\033[97m[ WAKE-ON-LAN ]\033[0m 🚀 \033[93mFiring Magic Packet to {alias} ({dev.mac}) !!!\033[0m")
                     results.append(f"• `{alias}` ({dev.mac}): ✅ Sent ({res['packets_sent']} packets)")
                 else:
                     results.append(f"• `{alias}` ({dev.mac}): ❌ Failed ({res.get('error', 'Unknown')})")
@@ -334,6 +354,9 @@ class CommandDispatcher:
         )
 
         if res["success"]:
+            import datetime
+            now_str = datetime.datetime.now().strftime("%H:%M:%S")
+            print(f"[\033[96m{now_str}\033[0m] \033[41m\033[97m[ WAKE-ON-LAN ]\033[0m 🚀 \033[93mFiring Magic Packet to {target_dev.alias} ({target_dev.mac}) !!!\033[0m")
             msg = (
                 f"⚡ Wake-on-LAN Magic Packet Sent\n\n"
                 f"• Alias: `{target_dev.alias}`\n"
