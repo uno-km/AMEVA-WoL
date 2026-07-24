@@ -6,6 +6,7 @@ import logging
 import platform
 import socket
 import subprocess
+import re
 from typing import Dict, List, Optional
 
 from telegram import Update
@@ -111,11 +112,11 @@ class CommandDispatcher:
             return
 
         manual = (
-            "📖 **AMEVA-WoL User Manual & Documentation**\n\n"
-            "**1. What is AMEVA-WoL?**\n"
+            "📖 AMEVA-WoL User Manual & Documentation\n\n"
+            "1. What is AMEVA-WoL?\n"
             "AMEVA-WoL is an unprivileged Wake-on-LAN gateway. It listens for Telegram commands "
             "and broadcasts UDP Magic Packets on your local network to turn on target computers.\n\n"
-            "**2. Adding Devices (/add)**\n"
+            "2. Adding Devices (/add)\n"
             "Syntax: `/add [--overwrite] <alias> <mac> [ip] [broadcast] [port]`\n"
             "• `alias`: 1-32 chars (a-z, 0-9, -, _)\n"
             "• `mac`: AA:BB:CC:DD:EE:FF or AA-BB-CC-DD-EE-FF or AABBCCDDEEFF\n"
@@ -125,21 +126,21 @@ class CommandDispatcher:
             "• `/add server AABBCCDDEEFF 192.168.0.50 192.168.0.255 9`\n"
             "• `/add nas AA:BB:CC:DD:EE:03`\n"
             "• `/add --overwrite PC1 AA:BB:CC:DD:EE:99 192.168.0.105`\n\n"
-            "**3. Waking Computers (/wake)**\n"
+            "3. Waking Computers (/wake)\n"
             "• `/wake`: If only 1 device registered, wakes it immediately.\n"
             "• `/wake <alias>`: Wakes the specified device.\n"
             "• `/wake all`: Broadcasts Magic Packets to ALL registered devices.\n"
             "*(Note: /wake sends UDP packets immediately without pinging first.)*\n\n"
-            "**4. Checking Reachability (/status)**\n"
+            "4. Checking Reachability (/status)\n"
             "• `/status [alias|all]`: Pings target IP(s). Never sends Magic Packets.\n"
             "*(Note: Ping failure does NOT conclusively prove a computer is powered off, "
             "as OS firewalls may block ICMP requests.)*\n\n"
-            "**5. Always-On Mode**\n"
+            "5. Always-On Mode\n"
             "When running with `--always-on [minutes]`, AMEVA-WoL periodically pings registered "
             "devices with IP addresses. If a host becomes unreachable, it automatically sends Wake-on-LAN packets.\n\n"
-            "**6. Important Hardware & Network Notes**\n"
-            "• Target computers must have **Wake-on-LAN enabled in BIOS/UEFI** and OS network driver.\n"
-            "• The gateway phone/laptop and target PC generally must be connected to the **same local subnet/LAN**.\n"
+            "6. Important Hardware & Network Notes\n"
+            "• Target computers must have Wake-on-LAN enabled in BIOS/UEFI and OS network driver.\n"
+            "• The gateway phone/laptop and target PC generally must be connected to the same local subnet/LAN.\n"
             "• Wired Ethernet is strongly recommended for target PCs.\n"
             "• Running computers normally ignore incoming Magic Packets.\n"
         )
@@ -154,9 +155,9 @@ class CommandDispatcher:
         chat_id = chat.id if chat else "Unknown"
 
         msg = (
-            "🆔 **Telegram Account & Chat Identifiers**\n\n"
-            f"• **User ID:** `{user_id}`\n"
-            f"• **Chat ID:** `{chat_id}`\n\n"
+            "🆔 Telegram Account & Chat Identifiers\n\n"
+            f"• User ID: `{user_id}`\n"
+            f"• Chat ID: `{chat_id}`\n\n"
             "Use these IDs in your `.env` configuration (`ALLOWED_USER_IDS` / `ALLOWED_CHAT_IDS`)."
         )
         await self._reply_safe(update, msg)
@@ -173,20 +174,20 @@ class CommandDispatcher:
         args = tokens[1:]
         if not args:
             help_msg = (
-                "ℹ️ **Usage: /add**\n\n"
-                "**Syntax:**\n"
+                "ℹ️ Usage: /add\n\n"
+                "Syntax:\n"
                 "`/add <alias> <mac> <ip>`\n"
                 "`/add <alias> <mac> <ip> <broadcast>`\n"
                 "`/add <alias> <mac> <ip> <broadcast> <port>`\n"
                 "`/add <alias> <mac>`\n"
                 "`/add --overwrite <alias> <mac> <ip> [broadcast] [port]`\n\n"
-                "**Parameters:**\n"
+                "Parameters:\n"
                 "• `alias`: Device name (1-32 chars, a-z0-9_-)\n"
                 "• `mac`: Network card MAC address (e.g. AA:BB:CC:DD:EE:FF)\n"
                 "• `ip`: IPv4 address for ping status (Optional)\n"
                 "• `broadcast`: IPv4 subnet broadcast address (Default: `.env` setting)\n"
                 "• `port`: UDP port (Default: 9)\n\n"
-                "**Examples:**\n"
+                "Examples:\n"
                 "• `/add 1070 AA:BB:CC:DD:EE:01 192.168.0.107`\n"
                 "• `/add young AA-BB-CC-DD-EE-02 192.168.0.108`\n"
                 "• `/add server AABBCCDDEEFF 192.168.0.50 192.168.0.255 9`\n"
@@ -253,12 +254,12 @@ class CommandDispatcher:
             return
 
         response = [
-            f"✅ **Device Registered Successfully**\n",
-            f"• **Alias:** `{norm_alias}`",
-            f"• **MAC:** `{norm_mac}`",
-            f"• **IP:** `{norm_ip or 'Not configured'}`",
-            f"• **Broadcast:** `{norm_broadcast}`",
-            f"• **Port:** `{norm_port}`",
+            f"✅ Device Registered Successfully\n",
+            f"• Alias: `{norm_alias}`",
+            f"• MAC: `{norm_mac}`",
+            f"• IP: `{norm_ip or 'Not configured'}`",
+            f"• Broadcast: `{norm_broadcast}`",
+            f"• Port: `{norm_port}`",
         ]
         if not norm_ip:
             response.append(
@@ -298,7 +299,7 @@ class CommandDispatcher:
                 else:
                     results.append(f"• `{alias}` ({dev.mac}): ❌ Failed ({res.get('error', 'Unknown')})")
 
-            summary = "⚡ **Wake-on-LAN Broadcast All Results:**\n\n" + "\n".join(results)
+            summary = "⚡ Wake-on-LAN Broadcast All Results:\n\n" + "\n".join(results)
             await self._reply_safe(update, summary)
             return
 
@@ -334,12 +335,12 @@ class CommandDispatcher:
 
         if res["success"]:
             msg = (
-                f"⚡ **Wake-on-LAN Magic Packet Sent**\n\n"
-                f"• **Alias:** `{target_dev.alias}`\n"
-                f"• **MAC:** `{target_dev.mac}`\n"
-                f"• **Broadcast:** `{target_dev.broadcast}`\n"
-                f"• **Port:** `{target_dev.port}`\n"
-                f"• **Packets Sent:** {res['packets_sent']} (repeat count: {res['repeat']})"
+                f"⚡ Wake-on-LAN Magic Packet Sent\n\n"
+                f"• Alias: `{target_dev.alias}`\n"
+                f"• MAC: `{target_dev.mac}`\n"
+                f"• Broadcast: `{target_dev.broadcast}`\n"
+                f"• Port: `{target_dev.port}`\n"
+                f"• Packets Sent: {res['packets_sent']} (repeat count: {res['repeat']})"
             )
         else:
             msg = f"❌ Failed to transmit Magic Packet for `{target_dev.alias}`: {res.get('error', 'Unknown error')}"
@@ -378,7 +379,7 @@ class CommandDispatcher:
             results = await asyncio.gather(*tasks)
 
             header = (
-                "📊 **Device Reachability Status Summary:**\n\n"
+                "📊 Device Reachability Status Summary:\n\n"
                 + "\n".join(results)
                 + "\n\n_*Note: OFFLINE status means ICMP ping failed. OS firewalls may block ICMP packets._"
             )
@@ -409,7 +410,7 @@ class CommandDispatcher:
         if not target_dev.ip:
             await self._reply_safe(
                 update,
-                f"❓ **Status for `{target_dev.alias}`:** UNKNOWN\n"
+                f"❓ Status for `{target_dev.alias}`: UNKNOWN\n"
                 "Reason: No IP address is configured for this device."
             )
             return
@@ -419,9 +420,9 @@ class CommandDispatcher:
 
         status_badge = "🟢 ONLINE" if online else "🔴 OFFLINE / UNREACHABLE"
         msg = (
-            f"📊 **Device Status: `{target_dev.alias}`**\n\n"
-            f"• **IP Address:** `{target_dev.ip}`\n"
-            f"• **Reachability:** {status_badge}\n\n"
+            f"📊 Device Status: `{target_dev.alias}`\n\n"
+            f"• IP Address: `{target_dev.ip}`\n"
+            f"• Reachability: {status_badge}\n\n"
             "_*Note: Failure to respond to ICMP ping does not prove the system is powered down (e.g. firewall blocking)._"
         )
         await self._reply_safe(update, msg)
@@ -436,7 +437,7 @@ class CommandDispatcher:
             await self._reply_safe(update, "📋 No devices registered. Use `/add` to register your first computer.")
             return
 
-        lines = [f"📋 **Registered Device Inventory ({len(devices)})**\n"]
+        lines = [f"📋 Registered Device Inventory ({len(devices)})\n"]
         for alias in sorted(devices.keys()):
             dev = devices[alias]
             lines.append(
@@ -525,13 +526,116 @@ class CommandDispatcher:
             output = f"Error executing {cmd[0]}: {str(e)}"
         
         msg = (
-            f"✅ **Test Ping Successful**\n\n"
-            f"• **Hostname**: `{hostname}`\n"
-            f"• **OS**: `{os_name}`\n\n"
-            f"**Network Configuration (`{cmd[0]}`):**\n"
+            f"✅ Test Ping Successful\n\n"
+            f"• Hostname: `{hostname}`\n"
+            f"• OS: `{os_name}`\n\n"
+            f"Network Configuration (`{cmd[0]}`):\n"
             f"```text\n{output[:3500]}\n```"
         )
         await self._reply_safe(update, msg)
+
+    async def handle_flower(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """/flower command handler to secretly discover local network devices."""
+        if not await self._check_auth_and_rate_limit(update):
+            return
+
+        if not update.effective_message:
+            return
+
+        # 1. Get local IP and subnet
+        pot = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            pot.connect(('10.255.255.255', 1))
+            seed_ip = pot.getsockname()[0]
+        except Exception:
+            seed_ip = '127.0.0.1'
+        finally:
+            pot.close()
+            
+        if seed_ip == '127.0.0.1':
+            await self._reply_safe(update, "❌ Could not plant the seed. Are you connected to a garden (network)?")
+            return
+            
+        garden_bed = ".".join(seed_ip.split('.')[:3]) + ".0/24"
+        await self._reply_safe(update, f"🌸 Watering the garden...\n\n• Seed: `{seed_ip}`\n• Garden Bed: `{garden_bed}`\n\n⏳ Waiting for flowers to bloom... (This takes about 5~15 seconds)")
+
+        weather = platform.system()
+        
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as greenhouse:
+                # 2. Run NMAP to populate ARP cache
+                def _water_plants():
+                    # -sn: Ping Scan, -T4: Aggressive timing
+                    return subprocess.run(["nmap", "-sn", "-T4", garden_bed], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30)
+                
+                bloom_result = await loop.run_in_executor(greenhouse, _water_plants)
+                
+                bloom_out = bloom_result.stdout.lower()
+                bloom_success = "command not found" not in bloom_out and "is not recognized" not in bloom_out and "no such file" not in bloom_out
+                
+                # 3. Read ARP Table
+                def _check_roots():
+                    if weather == "Windows":
+                        return subprocess.run(["arp", "-a"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=5)
+                    else:
+                        res = subprocess.run(["ip", "neigh"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=5)
+                        if not res.stdout.strip() or "command not found" in res.stdout.lower():
+                            res = subprocess.run(["arp", "-a"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=5)
+                        return res
+                        
+                root_result = await loop.run_in_executor(greenhouse, _check_roots)
+                root_output = root_result.stdout
+                
+            # 4. Parse & Beautify ARP Table
+            petal_pattern = re.compile(r"(\d{1,3}(?:\.\d{1,3}){3}).*?([0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2})")
+            
+            blossoms = []
+            seen_petals = set()
+            for match in petal_pattern.finditer(root_output):
+                stem = match.group(1)
+                leaf = match.group(2).replace("-", ":").upper()
+                
+                # Ignore broadcast/multicast MACs
+                if leaf not in seen_petals and leaf != "FF:FF:FF:FF:FF:FF" and not leaf.startswith("01:00:5E") and not leaf.startswith("33:33:"):
+                    seen_petals.add(leaf)
+                    blossoms.append({"stem": stem, "leaf": leaf})
+            
+            # Resolve hostnames concurrently
+            async def identify_flower(bud):
+                stem = bud["stem"]
+                try:
+                    # short timeout so we don't hang if DNS is slow
+                    fragrance, _, _ = await asyncio.wait_for(
+                        loop.run_in_executor(None, socket.gethostbyaddr, stem),
+                        timeout=1.0
+                    )
+                    bud["fragrance"] = fragrance if fragrance != stem else "Unknown Flower"
+                except Exception:
+                    bud["fragrance"] = "Unknown Flower"
+            
+            if blossoms:
+                await asyncio.gather(*(identify_flower(b) for b in blossoms))
+                
+            bouquet = []
+            for b in sorted(blossoms, key=lambda x: x["stem"]):
+                stem, leaf, fragrance = b["stem"], b["leaf"], b["fragrance"]
+                if stem == seed_ip:
+                    bouquet.append(f"• 📱 {stem}  ➡️  `{leaf}`\n  └ 🏷️ `{fragrance}` (This Host)")
+                else:
+                    bouquet.append(f"• 🖥️ {stem}  ➡️  `{leaf}`\n  └ 🏷️ `{fragrance}`")
+            
+            sunshine_status = "☀️ The sun is shining" if bloom_success else "☁️ Cloudy day (Using Cached roots)"
+            
+            if not bouquet:
+                msg = f"💐 Garden Tour Complete\n\n{sunshine_status}\n\n❌ No flowers found in the garden."
+            else:
+                msg = f"💐 Garden Tour Complete ({len(bouquet)} Flowers Found)\n\n{sunshine_status}\n\n" + "\n".join(bouquet)
+                
+            await self._reply_safe(update, msg)
+            
+        except Exception as bug:
+            await self._reply_safe(update, f"🐛 A bug ate the flowers: {str(bug)}")
 
     async def handle_unknown(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handler for unrecognized commands."""

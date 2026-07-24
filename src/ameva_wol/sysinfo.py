@@ -177,23 +177,23 @@ async def collect_sysinfo(include_speedtest: bool = False) -> str:
     )
 
     report = [
-        f"📱 **Host System Information**",
-        f"• **OS:** `{os_info}`",
-        f"• **Hardware:** `{props}`",
-        f"• **CPU:** `{cpu_usage}% ({cpu_cores} Cores)`" if HAS_PSUTIL else "• **CPU:** `N/A (psutil not installed)`",
-        f"• **RAM:** `{mem_used:.1f}GB / {mem_total:.1f}GB ({mem_percent}%)`" if HAS_PSUTIL else "• **RAM:** `N/A`",
-        f"• **Storage:** `{disk_used:.1f}GB / {disk_total:.1f}GB ({disk_percent}%)`" if HAS_PSUTIL else "• **Storage:** `N/A`",
-        f"• **Battery:** `{batt}`",
-        f"• **Location:** `{loc}`",
-        f"• **Sensors:** `{sensors}`",
+        f"📱 Host System Information",
+        f"• OS: `{os_info}`",
+        f"• Hardware: `{props}`",
+        f"• CPU: `{cpu_usage}% ({cpu_cores} Cores)`" if HAS_PSUTIL else "• CPU: `N/A (psutil not installed)`",
+        f"• RAM: `{mem_used:.1f}GB / {mem_total:.1f}GB ({mem_percent}%)`" if HAS_PSUTIL else "• RAM: `N/A`",
+        f"• Storage: `{disk_used:.1f}GB / {disk_total:.1f}GB ({disk_percent}%)`" if HAS_PSUTIL else "• Storage: `N/A`",
+        f"• Battery: `{batt}`",
+        f"• Location: `{loc}`",
+        f"• Sensors: `{sensors}`",
     ]
 
     if include_speedtest:
         loop = asyncio.get_running_loop()
         with ThreadPoolExecutor() as pool:
             speed = await loop.run_in_executor(pool, run_speedtest_sync)
-        report.append(f"• **Network Speed:** `{speed}`")
+        report.append(f"• Network Speed: `{speed}`")
     else:
-        report.append(f"• **Network Speed:** `⏳ Measuring...`")
+        report.append(f"• Network Speed: `⏳ Measuring...`")
 
     return "\n".join(report)
