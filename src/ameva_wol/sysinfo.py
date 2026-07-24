@@ -7,7 +7,11 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Any, Optional
 
 import httpx
-import psutil
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
 import speedtest
 
 logger = logging.getLogger("ameva_wol.sysinfo")
@@ -44,10 +48,11 @@ async def get_battery_info() -> str:
             pass
     
     # Fallback to psutil
-    batt = psutil.sensors_battery()
-    if batt:
-        plugged = "Plugged In" if batt.power_plugged else "Discharging"
-        return f"{batt.percent}% ({plugged})"
+    if HAS_PSUTIL:
+        batt = psutil.sensors_battery()
+        if batt:
+            plugged = "Plugged In" if batt.power_plugged else "Discharging"
+            return f"{batt.percent}% ({plugged})"
     return "N/A"
 
 async def get_location() -> str:
@@ -143,16 +148,25 @@ async def collect_sysinfo(include_speedtest: bool = False) -> str:
     uname = platform.uname()
     os_info = f"{uname.system} {uname.release} ({uname.machine})"
     
-    cpu_usage = psutil.cpu_percent(interval=0.5)
-    cpu_cores = psutil.cpu_count(logical=True)
-    
-    mem = psutil.virtual_memory()
-    mem_total = mem.total / (1024**3)
-    mem_used = mem.used / (1024**3)
-    
-    disk = psutil.disk_usage('/')
-    disk_total = disk.total / (1024**3)
-    disk_used = disk.used / (1024**3)
+    if HAS_PSUTIL:
+        cpu_usage = psutil.cpu_percent(interval=0.5)
+        cpu_cores = psutil.cpu_count(logical=True)
+        
+        mem = psutil.virtual_memory()
+        mem_total = mem.total / (1024**3)
+        mem_used = mem.used / (1024**3)
+        mem_percent = mem.percent
+        
+        disk = psutil.disk_usage('/')
+        disk_total = disk.total / (1024**3)
+        disk_used = disk.used / (1024**3)
+        disk_percent = disk.percent
+    else:
+        cpu_usage = cpu_cores = "N/A"
+        mem_used = mem_total = 0.0
+        mem_percent = "N/A"
+        disk_used = disk_total = 0.0
+        disk_percent = "N/A"
 
     # 2. Advanced / Termux Info
     batt, loc, sensors, props = await asyncio.gather(
@@ -166,9 +180,9 @@ async def collect_sysinfo(include_speedtest: bool = False) -> str:
         f"📱 **Host System Information**",
         f"• **OS:** `{os_info}`",
         f"• **Hardware:** `{props}`",
-        f"• **CPU:** `{cpu_usage}% ({cpu_cores} Cores)`",
-        f"• **RAM:** `{mem_used:.1f}GB / {mem_total:.1f}GB ({mem.percent}%)`",
-        f"• **Storage:** `{disk_used:.1f}GB / {disk_total:.1f}GB ({disk.percent}%)`",
+        f"• **CPU:** `{cpu_usage}% ({cpu_cores} Cores)`" if HAS_PSUTIL else "• **CPU:** `N/A (psutil not installed)`",
+        f"• **RAM:** `{mem_used:.1f}GB / {mem_total:.1f}GB ({mem_percent}%)`" if HAS_PSUTIL else "• **RAM:** `N/A`",
+        f"• **Storage:** `{disk_used:.1f}GB / {disk_total:.1f}GB ({disk_percent}%)`" if HAS_PSUTIL else "• **Storage:** `N/A`",
         f"• **Battery:** `{batt}`",
         f"• **Location:** `{loc}`",
         f"• **Sensors:** `{sensors}`",
