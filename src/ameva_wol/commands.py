@@ -1,7 +1,11 @@
 """Telegram command handlers for AMEVA-WoL gateway operations."""
 
 import asyncio
+import concurrent.futures
 import logging
+import platform
+import socket
+import subprocess
 from typing import Dict, List, Optional
 
 from telegram import Update
@@ -96,6 +100,7 @@ class CommandDispatcher:
             "• /remove <alias> - Delete registered device\n"
             "• /id - View your Telegram User & Chat ID\n"
             "• /host - View detailed gateway system information\n"
+            "• /test - Test communication and view network interfaces\n"
             "• /how - Comprehensive manual & documentation\n"
         )
         await self._reply_safe(update, msg)
@@ -161,7 +166,7 @@ class CommandDispatcher:
         if not await self._check_auth_and_rate_limit(update):
             return
 
-        text = update.effective_message.text if update.effective_message else ""
+        text = (update.effective_message.text or "") if update.effective_message else ""
         tokens = parse_telegram_command(text)
         # tokens[0] is '/add'
 
@@ -268,7 +273,7 @@ class CommandDispatcher:
         if not await self._check_auth_and_rate_limit(update):
             return
 
-        text = update.effective_message.text if update.effective_message else ""
+        text = (update.effective_message.text or "") if update.effective_message else ""
         tokens = parse_telegram_command(text)
         args = tokens[1:]
 
@@ -346,7 +351,7 @@ class CommandDispatcher:
         if not await self._check_auth_and_rate_limit(update):
             return
 
-        text = update.effective_message.text if update.effective_message else ""
+        text = (update.effective_message.text or "") if update.effective_message else ""
         tokens = parse_telegram_command(text)
         args = tokens[1:]
 
@@ -448,7 +453,7 @@ class CommandDispatcher:
         if not await self._check_auth_and_rate_limit(update):
             return
 
-        text = update.effective_message.text if update.effective_message else ""
+        text = (update.effective_message.text or "") if update.effective_message else ""
         tokens = parse_telegram_command(text)
         args = tokens[1:]
 
@@ -481,7 +486,7 @@ class CommandDispatcher:
         # 2. Run speedtest in background thread
         try:
             loop = asyncio.get_running_loop()
-            with ThreadPoolExecutor() as pool:
+            with concurrent.futures.ThreadPoolExecutor() as pool:
                 speed_result = await loop.run_in_executor(pool, run_speedtest_sync)
             
             # 3. Re-generate report with speedtest results and edit the message
@@ -491,6 +496,42 @@ class CommandDispatcher:
             logger.error(f"Error running speedtest: {e}")
             final_report = initial_report.replace("`⏳ Measuring...`", f"`Failed: {e}`")
             await msg_obj.edit_text(final_report)
+
+    async def handle_test(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """/test command handler to verify communication, shell execution, and return network config."""
+        if not await self._check_auth_and_rate_limit(update):
+            return
+
+        if not update.effective_message:
+            return
+
+        await self._reply_safe(update, "⏳ Running test ping and retrieving network interfaces...")
+        
+        hostname = socket.gethostname()
+        os_name = platform.system()
+        cmd = ["ipconfig"] if os_name == "Windows" else ["ifconfig"]
+        
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                def _run_cmd():
+                    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
+                result = await loop.run_in_executor(pool, _run_cmd)
+            
+            output = result.stdout.strip()
+            if not output:
+                output = "(No output returned)"
+        except Exception as e:
+            output = f"Error executing {cmd[0]}: {str(e)}"
+        
+        msg = (
+            f"✅ **Test Ping Successful**\n\n"
+            f"• **Hostname**: `{hostname}`\n"
+            f"• **OS**: `{os_name}`\n\n"
+            f"**Network Configuration (`{cmd[0]}`):**\n"
+            f"```text\n{output[:3500]}\n```"
+        )
+        await self._reply_safe(update, msg)
 
     async def handle_unknown(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handler for unrecognized commands."""
