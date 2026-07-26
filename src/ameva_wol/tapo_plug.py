@@ -73,49 +73,51 @@ class TapoManager:
     async def turn_on(self, alias: Optional[str] = None) -> str:
         plug = await self._get_plug(alias)
         res = await plug.on()
-        if res.is_ok:
+        if res.is_success():
             return "✅ Successfully turned ON"
-        return f"❌ Failed to turn on: {res.error_message}"
+        return f"❌ Failed to turn on: {res.error()}"
 
     async def turn_off(self, alias: Optional[str] = None) -> str:
         plug = await self._get_plug(alias)
         res = await plug.off()
-        if res.is_ok:
+        if res.is_success():
             return "✅ Successfully turned OFF"
-        return f"❌ Failed to turn off: {res.error_message}"
+        return f"❌ Failed to turn off: {res.error()}"
 
     async def reboot(self, alias: Optional[str] = None, delay_seconds: int = 10) -> str:
         plug = await self._get_plug(alias)
         res_off = await plug.off()
-        if not res_off.is_ok:
-            return f"❌ Failed to turn off during reboot: {res_off.error_message}"
+        if not res_off.is_success():
+            return f"❌ Failed to turn off during reboot: {res_off.error()}"
         
         await asyncio.sleep(delay_seconds)
         
         res_on = await plug.on()
-        if res_on.is_ok:
+        if res_on.is_success():
             return f"✅ Successfully rebooted (Off -> {delay_seconds}s -> On)"
-        return f"⚠️ Turned off, but failed to turn back on: {res_on.error_message}"
+        return f"⚠️ Turned off, but failed to turn back on: {res_on.error()}"
 
     async def get_status(self, alias: Optional[str] = None) -> str:
         plug = await self._get_plug(alias)
         info_res = await plug.get_state()
         energy_res = await plug.get_energy_usage()
 
-        if not info_res.is_ok:
-            return f"❌ Failed to get device state: {info_res.error_message}"
+        if not info_res.is_success():
+            return f"❌ Failed to get device state: {info_res.error()}"
         
-        state_obj = info_res.value
+        state_obj = info_res.get()
         state = "🟢 ON" if getattr(state_obj, "device_on", False) else "🔴 OFF"
         
         lines = [f"📊 Tapo Plug Status", f"• State: {state}"]
         
-        if energy_res.is_ok:
-            energy = energy_res.value
+        if energy_res.is_success():
+            energy = energy_res.get()
             lines.append(f"• Current Power: `{energy.current_power} W`")
             lines.append(f"• Today's Energy: `{energy.today_energy / 1000:.2f} kWh`")
             lines.append(f"• Month's Energy: `{energy.month_energy / 1000:.2f} kWh`")
             lines.append(f"• Today's Runtime: `{energy.today_runtime} minutes`")
             lines.append(f"• Month's Runtime: `{energy.month_runtime} minutes`")
+        else:
+            lines.append(f"• Energy Info: Not available ({energy_res.error()})")
         
         return "\n".join(lines)
