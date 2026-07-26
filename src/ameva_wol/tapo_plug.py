@@ -55,7 +55,7 @@ class TapoManager:
         
         from plugp100.common.credentials import AuthCredential
         cred = AuthCredential(cfg["email"], cfg["password"])
-        client = TapoClient(cred, ip)
+        client = TapoClient(cred, f"http://{ip}")
         await client.initialize()
         plug = PlugDevice(client)
         return plug
