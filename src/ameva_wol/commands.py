@@ -712,20 +712,7 @@ class CommandDispatcher:
                 # 1. Add to TapoRegistry (power control)
                 await self.tapo_registry.add_device(norm_alias, p_email, p_password, norm_ip, norm_mac)
                 
-                # 2. Add to DeviceRegistry (WoL)
-                now = current_utc_iso()
-                device = Device(
-                    alias=norm_alias,
-                    mac=norm_mac,
-                    ip=norm_ip,
-                    broadcast=self.config.default_broadcast,
-                    port=self.config.default_wol_port,
-                    created_at=now,
-                    updated_at=now,
-                )
-                await self.registry.add(device, overwrite=True)
-                
-                await self._reply_safe(update, f"✅ Successfully registered `{norm_alias}` for both Power and WoL!")
+                await self._reply_safe(update, f"✅ Successfully registered `{norm_alias}` for Power control!")
             except Exception as e:
                 logger.error(f"Error registering Tapo device: {e}", exc_info=True)
                 await self._reply_safe(update, f"❌ Registration failed: {e}")
