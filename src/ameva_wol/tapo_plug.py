@@ -10,11 +10,12 @@ try:
     PLUGP100_AVAILABLE = True
 except ImportError as e:
     import traceback
-    print(f"\n[!!! CRITICAL ERROR !!!] Failed to import plugp100: {e}")
+    print(f"\n[!!! CRITICAL ERROR !!!] Failed to import plugp100 at startup: {e}")
     traceback.print_exc()
     TapoClient = None
     PlugDevice = None
     PLUGP100_AVAILABLE = False
+    PLUGP100_IMPORT_ERROR = str(e)
 
 logger = logging.getLogger("ameva_wol.tapo_plug")
 
@@ -49,7 +50,8 @@ class TapoManager:
         ip = await self._get_ip_for_alias(alias)
         cfg = await self.tapo_registry.get_config()
         if not TapoClient:
-            raise ImportError("plugp100 library is not installed.")
+            print(f"\n[DEBUG] _get_plug called, but PLUGP100 is not available. Error was: {PLUGP100_IMPORT_ERROR}")
+            raise ImportError(f"plugp100 library is not installed. Error: {PLUGP100_IMPORT_ERROR}")
         client = TapoClient(cfg["email"], cfg["password"])
         plug = PlugDevice(client, ip)
         await plug.login()
