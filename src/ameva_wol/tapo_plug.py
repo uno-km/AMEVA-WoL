@@ -7,6 +7,23 @@ from typing import Dict, Any, Optional
 try:
     from plugp100.api.tapo_client import TapoClient
     from plugp100.api.plug_device import PlugDevice
+    from plugp100.protocol.klap_protocol import KlapProtocol
+    from http.cookies import Morsel
+    
+    _orig_session_post = KlapProtocol.session_post
+    async def _patched_session_post(self, url: str, cookies=None, params=None, data=None):
+        resp, response_data = await _orig_session_post(self, url, cookies, params, data)
+        if KlapProtocol.TP_SESSION_COOKIE_NAME not in resp.cookies:
+            m = Morsel()
+            m.set(KlapProtocol.TP_SESSION_COOKIE_NAME, "dummy_session", "dummy_session")
+            resp.cookies[KlapProtocol.TP_SESSION_COOKIE_NAME] = m
+        if "TIMEOUT" not in resp.cookies:
+            m = Morsel()
+            m.set("TIMEOUT", "86400", "86400")
+            resp.cookies["TIMEOUT"] = m
+        return resp, response_data
+    KlapProtocol.session_post = _patched_session_post
+
     PLUGP100_AVAILABLE = True
 except ImportError as e:
     import traceback
