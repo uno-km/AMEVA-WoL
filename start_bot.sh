@@ -8,6 +8,12 @@
 echo "[*] Acquiring Termux Wake Lock..."
 termux-wake-lock
 
+# 1.5 Auto-Update (Git Pull)
+echo "[*] Updating to the latest code..."
+git reset --hard
+git pull
+
+
 # 2. Install native dependencies (Bypass pip compilation errors on Android)
 # (py3compile 에러가 떠도 무시하고 진행됩니다. 실제 설치는 정상적으로 되기 때문입니다.)
 echo "[*] Ensuring native Android packages are installed..."
