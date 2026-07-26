@@ -680,7 +680,7 @@ class CommandDispatcher:
         args = tokens[1:]
 
         if not args:
-            await self._reply_safe(update, "ℹ️ Usage: `/power <on|off|re|status|add> [alias]`")
+            await self._reply_safe(update, "ℹ️ Usage: `/power <on|off|re|status|list|add> [alias]`")
             return
             
         action = args[0].lower()
@@ -741,6 +741,19 @@ class CommandDispatcher:
         await self._reply_safe(update, f"⏳ Processing Tapo command `{action}`" + (f" for `{alias}`" if alias else "") + "...")
         
         try:
+            if action == "list":
+                cfg = await self.tapo_registry.get_config()
+                tapo_devices = cfg.get("devices", {})
+                if not tapo_devices:
+                    msg = "ℹ️ No Tapo smart plugs registered yet. Use `/power add` to add one."
+                else:
+                    lines = ["📋 Registered Tapo Smart Plugs:"]
+                    for alias, d in tapo_devices.items():
+                        lines.append(f"• `{alias}` ({d.get('ip')}) - MAC: `{d.get('mac', 'N/A')}`")
+                    msg = "\n".join(lines)
+                await self._reply_safe(update, msg)
+                return
+                
             if action == "on":
                 msg = await self.tapo.turn_on(alias)
             elif action == "off":
@@ -750,7 +763,7 @@ class CommandDispatcher:
             elif action == "status":
                 msg = await self.tapo.get_status(alias)
             else:
-                msg = "❌ Invalid action. Use: on, off, re, status"
+                msg = "❌ Invalid action. Use: on, off, re, status, list, add"
         except Exception as e:
             msg = f"❌ Tapo Error: {e}"
             

@@ -92,7 +92,10 @@ class TapoManager:
         
         if energy_res.is_ok:
             energy = energy_res.value
-            current_power = energy.current_power
-            lines.append(f"• Current Power: `{current_power} W`")
+            lines.append(f"• Current Power: `{energy.current_power} W`")
+            lines.append(f"• Today's Energy: `{energy.today_energy / 1000:.2f} kWh`")
+            lines.append(f"• Month's Energy: `{energy.month_energy / 1000:.2f} kWh`")
+            lines.append(f"• Today's Runtime: `{energy.today_runtime} minutes`")
+            lines.append(f"• Month's Runtime: `{energy.month_runtime} minutes`")
         
         return "\n".join(lines)
