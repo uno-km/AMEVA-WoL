@@ -750,7 +750,9 @@ class CommandDispatcher:
             else:
                 msg = "❌ Invalid action. Use: on, off, re, status, list, add"
         except Exception as e:
-            msg = f"❌ Tapo Error: {e}"
+            import traceback
+            tb = traceback.format_exc()
+            msg = f"❌ Tapo Error: {e}\n\n<pre>{tb}</pre>"
             
         await self._reply_safe(update, msg)
 
