@@ -96,7 +96,7 @@ class TapoRegistry:
         dev = devices.get(alias)
         return dev.get("ip") if dev else None
 
-    async def add_device(self, alias: str, email: str, password: str, ip: str, mac: str) -> None:
+    async def add_device(self, alias: str, email: str, password: str, ip: str) -> None:
         """Register Tapo device and credentials in persistent storage."""
         norm_alias = validate_alias(alias)
         async with self._lock:
@@ -111,8 +111,7 @@ class TapoRegistry:
                 
             self._cache["devices"][norm_alias] = {
                 "alias": norm_alias,
-                "ip": ip,
-                "mac": mac
+                "ip": ip
             }
             
             await self._write_file_atomic_unlocked(self._cache)

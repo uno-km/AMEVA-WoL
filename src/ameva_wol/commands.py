@@ -686,23 +686,21 @@ class CommandDispatcher:
         action = args[0].lower()
         
         if action == "add":
-            if len(args) < 6:
+            if len(args) < 5:
                 await self._reply_safe(
                     update,
-                    "ℹ️ Usage: `/power add <alias> <email> <password> <ip> <mac>`\n\n"
-                    "이메일, 비밀번호, IP 주소 및 MAC 주소를 한 번에 등록합니다.\n"
-                    "(Tapo 제어 및 Wake-on-LAN 동시 설정)\n\n"
+                    "ℹ️ Usage: `/power add <alias> <email> <password> <ip>`\n\n"
+                    "이메일, 비밀번호, IP 주소를 한 번에 등록합니다.\n"
                     "예시:\n"
-                    "`/power add mypc test@example.com password123 192.168.35.222 C0:3A:55:3F:52:74`"
+                    "`/power add mypc-con test@example.com password123 192.168.35.222`"
                 )
                 return
             
-            p_alias, p_email, p_password, p_ip, p_mac = args[1:6]
+            p_alias, p_email, p_password, p_ip = args[1:5]
             
             # Validation
             try:
                 norm_alias = validate_alias(p_alias)
-                norm_mac = validate_mac(p_mac)
                 norm_ip = validate_ipv4(p_ip)
             except ValueError as val_err:
                 await self._reply_safe(update, f"❌ Validation Error: {val_err}")
@@ -710,7 +708,7 @@ class CommandDispatcher:
                 
             try:
                 # 1. Add to TapoRegistry (power control)
-                await self.tapo_registry.add_device(norm_alias, p_email, p_password, norm_ip, norm_mac)
+                await self.tapo_registry.add_device(norm_alias, p_email, p_password, norm_ip)
                 
                 await self._reply_safe(update, f"✅ Successfully registered `{norm_alias}` for Power control!")
             except Exception as e:
@@ -736,7 +734,7 @@ class CommandDispatcher:
                 else:
                     lines = ["📋 Registered Tapo Smart Plugs:"]
                     for alias, d in tapo_devices.items():
-                        lines.append(f"• `{alias}` ({d.get('ip')}) - MAC: `{d.get('mac', 'N/A')}`")
+                        lines.append(f"• `{alias}` ({d.get('ip')})")
                     msg = "\n".join(lines)
                 await self._reply_safe(update, msg)
                 return
