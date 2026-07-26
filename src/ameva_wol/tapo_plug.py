@@ -83,7 +83,12 @@ class TapoManager:
             raise ImportError(f"plugp100 library is not installed. Error: {PLUGP100_IMPORT_ERROR}")
         
         from plugp100.common.credentials import AuthCredential
-        cred = AuthCredential(cfg["email"], cfg["password"])
+        
+        # Tapo devices often require the email to be completely lowercase for hashing.
+        email = str(cfg["email"]).strip().lower()
+        password = str(cfg["password"])
+        
+        cred = AuthCredential(email, password)
         client = TapoClient(cred, f"http://{ip}", protocol=None)
         try:
             await client.initialize()
