@@ -22,8 +22,6 @@ pkg install -y python-cryptography python-psutil || true
 # 3. Install remaining python dependencies
 echo "[*] Installing Python requirements..."
 pip install -r requirements.txt
-echo "[*] Force reinstalling plugp100 as requested..."
-pip install --upgrade --force-reinstall plugp100
 
 # 파이썬이 src 안의 모듈을 찾을 수 있도록 환경변수 추가
 export PYTHONPATH="src:$PYTHONPATH"
