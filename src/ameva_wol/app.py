@@ -10,6 +10,7 @@ from ameva_wol.config import Config, ConfigurationError
 from ameva_wol.locking import InstanceLock, InstanceLockError
 from ameva_wol.logging_config import setup_logging
 from ameva_wol.registry import DeviceRegistry
+from ameva_wol.tapo_registry import TapoRegistry
 from ameva_wol.scheduler import AlwaysOnScheduler
 from ameva_wol.telegram_bot import create_telegram_app
 
@@ -53,7 +54,15 @@ async def main_async(always_on: bool = False, interval_minutes: int = 5) -> int:
         return 1
 
     # 5. Build Telegram Application
-    tg_app = create_telegram_app(config, registry)
+    tapo_registry = TapoRegistry(config.data_dir)
+    try:
+        tapo_data = await tapo_registry.get_config()
+        tapo_devices = tapo_data.get("devices", {})
+        logger.info(f"Loaded Tapo registry ({len(tapo_devices)} device(s) registered).")
+    except Exception as err:
+        logger.error(f"Failed to load tapo registry: {err}")
+
+    tg_app = create_telegram_app(config, registry, tapo_registry)
 
     # 6. Initialize Always-On Scheduler if requested
     scheduler: Optional[AlwaysOnScheduler] = None

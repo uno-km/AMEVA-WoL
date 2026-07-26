@@ -14,38 +14,39 @@ except ImportError:
 logger = logging.getLogger("ameva_wol.tapo_plug")
 
 class TapoManager:
-    def __init__(self, email: Optional[str], password: Optional[str], devices: Dict[str, str]):
-        self.email = email
-        self.password = password
-        self.devices = devices  # {alias: ip}
-        self.client = None
+    def __init__(self, tapo_registry: "TapoRegistry"):
+        self.tapo_registry = tapo_registry
         
-        if self.email and self.password and TapoClient:
-            self.client = TapoClient(self.email, self.password)
+    async def is_configured(self) -> bool:
+        cfg = await self.tapo_registry.get_config()
+        return bool(cfg.get("email") and cfg.get("password") and cfg.get("devices"))
 
-    def is_configured(self) -> bool:
-        return bool(self.client and self.devices)
-
-    def _get_ip_for_alias(self, alias: Optional[str]) -> str:
-        if not self.devices:
+    async def _get_ip_for_alias(self, alias: Optional[str]) -> str:
+        cfg = await self.tapo_registry.get_config()
+        devices = cfg.get("devices", {})
+        if not devices:
             raise ValueError("No Tapo devices configured.")
         
         if not alias:
             # If no alias provided, and there's only 1 device, use it.
-            if len(self.devices) == 1:
-                return next(iter(self.devices.values()))
+            if len(devices) == 1:
+                return next(iter(devices.values()))["ip"]
             else:
-                raise ValueError(f"Multiple devices configured. Please specify an alias: {', '.join(self.devices.keys())}")
+                raise ValueError(f"Multiple devices configured. Please specify an alias: {', '.join(devices.keys())}")
         
         alias = alias.lower()
-        if alias not in self.devices:
-            raise ValueError(f"Device alias '{alias}' not found in TAPO_DEVICES.")
+        if alias not in devices:
+            raise ValueError(f"Device alias '{alias}' not found in Tapo Registry.")
         
-        return self.devices[alias]
+        return devices[alias]["ip"]
 
     async def _get_plug(self, alias: Optional[str]) -> "PlugDevice":
-        ip = self._get_ip_for_alias(alias)
-        plug = PlugDevice(self.client, ip)
+        ip = await self._get_ip_for_alias(alias)
+        cfg = await self.tapo_registry.get_config()
+        if not TapoClient:
+            raise ImportError("plugp100 library is not installed.")
+        client = TapoClient(cfg["email"], cfg["password"])
+        plug = PlugDevice(client, ip)
         await plug.login()
         return plug
 

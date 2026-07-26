@@ -37,14 +37,15 @@ logger = logging.getLogger("ameva_wol.commands")
 class CommandDispatcher:
     """Centralized handler for all Telegram commands with auth and security enforcement."""
 
-    def __init__(self, config: Config, registry: DeviceRegistry) -> None:
+    def __init__(self, config: Config, registry: DeviceRegistry, tapo_registry: "TapoRegistry") -> None:
         self.config = config
         self.registry = registry
+        self.tapo_registry = tapo_registry
         self.rate_limiter = RateLimiter(
             max_requests=config.rate_limit_commands,
             window_seconds=config.rate_limit_window_seconds,
         )
-        self.tapo = TapoManager(config.tapo_email, config.tapo_password, config.tapo_devices)
+        self.tapo = TapoManager(tapo_registry)
 
     async def _check_auth_and_rate_limit(self, update: Update) -> bool:
         """Enforce authorization and rate limiting on incoming update.
@@ -668,19 +669,67 @@ class CommandDispatcher:
         if not await self._check_auth_and_rate_limit(update):
             return
 
-        if not self.tapo.is_configured():
-            await self._reply_safe(update, "❌ Tapo Smart Plug is not configured in .env (TAPO_DEVICES, TAPO_EMAIL, TAPO_PASSWORD)")
-            return
-
         text = (update.effective_message.text or "") if update.effective_message else ""
         tokens = parse_telegram_command(text)
         args = tokens[1:]
 
         if not args:
-            await self._reply_safe(update, "ℹ️ Usage: `/power <on|off|re|status> [alias]`")
+            await self._reply_safe(update, "ℹ️ Usage: `/power <on|off|re|status|add> [alias]`")
             return
             
         action = args[0].lower()
+        
+        if action == "add":
+            if len(args) < 6:
+                await self._reply_safe(
+                    update,
+                    "ℹ️ Usage: `/power add <alias> <email> <password> <ip> <mac>`\n\n"
+                    "이메일, 비밀번호, IP 주소 및 MAC 주소를 한 번에 등록합니다.\n"
+                    "(Tapo 제어 및 Wake-on-LAN 동시 설정)\n\n"
+                    "예시:\n"
+                    "`/power add mypc test@example.com password123 192.168.35.222 C0:3A:55:3F:52:74`"
+                )
+                return
+            
+            p_alias, p_email, p_password, p_ip, p_mac = args[1:6]
+            
+            # Validation
+            try:
+                norm_alias = validate_alias(p_alias)
+                norm_mac = validate_mac(p_mac)
+                norm_ip = validate_ipv4(p_ip)
+            except ValueError as val_err:
+                await self._reply_safe(update, f"❌ Validation Error: {val_err}")
+                return
+                
+            try:
+                # 1. Add to TapoRegistry (power control)
+                await self.tapo_registry.add_device(norm_alias, p_email, p_password, norm_ip, norm_mac)
+                
+                # 2. Add to DeviceRegistry (WoL)
+                now = current_utc_iso()
+                device = Device(
+                    alias=norm_alias,
+                    mac=norm_mac,
+                    ip=norm_ip,
+                    broadcast=self.config.default_broadcast,
+                    port=self.config.default_wol_port,
+                    created_at=now,
+                    updated_at=now,
+                )
+                await self.registry.add(device, overwrite=True)
+                
+                await self._reply_safe(update, f"✅ Successfully registered `{norm_alias}` for both Power and WoL!")
+            except Exception as e:
+                logger.error(f"Error registering Tapo device: {e}", exc_info=True)
+                await self._reply_safe(update, f"❌ Registration failed: {e}")
+            return
+
+        # Ensure Tapo is configured for other actions
+        if not await self.tapo.is_configured():
+            await self._reply_safe(update, "❌ Tapo Smart Plug is not configured. Use `/power add` to configure it.")
+            return
+
         alias = args[1].lower() if len(args) > 1 else None
         
         await self._reply_safe(update, f"⏳ Processing Tapo command `{action}`" + (f" for `{alias}`" if alias else "") + "...")

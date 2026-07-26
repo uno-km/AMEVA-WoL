@@ -41,19 +41,20 @@ async def error_handler(update: Optional[object], context: ContextTypes.DEFAULT_
             pass
 
 
-def create_telegram_app(config: Config, registry: DeviceRegistry) -> Application:
+def create_telegram_app(config: Config, registry: DeviceRegistry, tapo_registry: "TapoRegistry") -> Application:
     """Construct and configure the Telegram python-telegram-bot Application instance.
 
     Args:
         config: Application configuration instance.
         registry: Persistent device registry.
+        tapo_registry: Tapo power device registry.
 
     Returns:
         Configured Application instance ready for initialization and long polling.
     """
     app = ApplicationBuilder().token(config.telegram_bot_token).build()
 
-    dispatcher = CommandDispatcher(config=config, registry=registry)
+    dispatcher = CommandDispatcher(config=config, registry=registry, tapo_registry=tapo_registry)
 
     # Register command routes
     app.add_handler(CommandHandler("start", dispatcher.handle_start))
