@@ -56,7 +56,17 @@ class TapoManager:
         from plugp100.common.credentials import AuthCredential
         cred = AuthCredential(cfg["email"], cfg["password"])
         client = TapoClient(cred, f"http://{ip}", protocol=None)
-        await client.initialize()
+        try:
+            await client.initialize()
+        except Exception as e:
+            from plugp100.responses.tapo_exception import TapoException
+            if isinstance(e, TapoException) and e.error_code == -2402:
+                from plugp100.protocol.klap_protocol import KlapProtocol
+                protocol = KlapProtocol(auth_credential=cred, url=f"http://{ip}")
+                client = TapoClient(cred, f"http://{ip}", protocol=protocol)
+            else:
+                raise e
+        
         plug = PlugDevice(client)
         return plug
 
