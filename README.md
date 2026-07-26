@@ -88,10 +88,6 @@ ALLOWED_USER_IDS=여기에_내_텔레그램_ID_입력
 DEFAULT_BROADCAST=192.168.0.255
 DEFAULT_WOL_PORT=9
 
-# Tapo Smart Plug 설정 (선택사항)
-TAPO_EMAIL=your_email@example.com
-TAPO_PASSWORD=your_password
-TAPO_DEVICES=p110:192.168.0.5
 EOF
 ```
 
@@ -108,9 +104,10 @@ python -m ameva_wol
 | :--- | :--- | :--- |
 | **`/start`** | `/start` | 🟢 Check authorization and bot status |
 | **`/wake`** | `/wake [alias\|all]` | ⚡ Send Wake-on-LAN Magic Packet |
-| **`/power`** | `/power <on\|off\|re\|status> [alias]`| 🔌 Control Tapo Smart Plug (ON/OFF/Reboot/Energy Status) |
+| **`/power add`** | `/power add <alias> <email> <password> <ip> <mac>`| 🔌 Register Tapo Plug credentials & PC MAC for WoL simultaneously |
+| **`/power`** | `/power <on\|off\|re\|status> [alias]`| 🔌 Control Tapo Smart Plug (ON/OFF/Reboot/Power Status). `/power on` also sends a Magic Packet automatically! |
 | **`/status`** | `/status [alias\|all]` | 🔍 Ping devices to check if they are online |
-| **`/add`** | `/add <alias> <mac> [ip]` | ➕ Register a new PC for WoL |
+| **`/add`** | `/add <alias> <mac> [ip]` | ➕ Register a new PC for WoL (if not using Tapo plug) |
 | **`/list`** | `/list` | 📋 List all registered devices |
 | **`/remove`**| `/remove <alias>` | 🗑️ Delete a device from registry |
 | **`/host`** | `/host` | 📊 View Gateway phone/server stats (CPU, RAM, Network) |
