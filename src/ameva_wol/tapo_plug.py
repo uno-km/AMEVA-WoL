@@ -52,9 +52,12 @@ class TapoManager:
         if not TapoClient:
             print(f"\n[DEBUG] _get_plug called, but PLUGP100 is not available. Error was: {PLUGP100_IMPORT_ERROR}")
             raise ImportError(f"plugp100 library is not installed. Error: {PLUGP100_IMPORT_ERROR}")
-        client = TapoClient(cfg["email"], cfg["password"])
-        plug = PlugDevice(client, ip)
-        await plug.login()
+        
+        from plugp100.common.credentials import AuthCredential
+        cred = AuthCredential(cfg["email"], cfg["password"])
+        client = TapoClient(cred, ip)
+        await client.initialize()
+        plug = PlugDevice(client)
         return plug
 
     async def turn_on(self, alias: Optional[str] = None) -> str:
@@ -86,14 +89,14 @@ class TapoManager:
 
     async def get_status(self, alias: Optional[str] = None) -> str:
         plug = await self._get_plug(alias)
-        info_res = await plug.get_device_info()
+        info_res = await plug.get_state()
         energy_res = await plug.get_energy_usage()
 
         if not info_res.is_ok:
-            return f"❌ Failed to get device info: {info_res.error_message}"
+            return f"❌ Failed to get device state: {info_res.error_message}"
         
-        info = info_res.value
-        state = "🟢 ON" if info.device_on else "🔴 OFF"
+        state_obj = info_res.value
+        state = "🟢 ON" if getattr(state_obj, "device_on", False) else "🔴 OFF"
         
         lines = [f"📊 Tapo Plug Status", f"• State: {state}"]
         
