@@ -7,9 +7,13 @@ from typing import Dict, Any, Optional
 try:
     from plugp100.api.tapo_client import TapoClient
     from plugp100.api.plug_device import PlugDevice
-except ImportError:
+    PLUGP100_AVAILABLE = True
+except ImportError as e:
+    import logging
+    logging.getLogger("ameva_wol.tapo_plug").error(f"Failed to import plugp100: {e}")
     TapoClient = None
     PlugDevice = None
+    PLUGP100_AVAILABLE = False
 
 logger = logging.getLogger("ameva_wol.tapo_plug")
 
