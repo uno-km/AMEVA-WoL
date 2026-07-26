@@ -18,8 +18,12 @@ def main():
     try:
         # Popen을 사용하여 쉘 스크립트로 제어권을 완전히 넘깁니다.
         sys.exit(subprocess.call(["./" + script_name]))
+    except KeyboardInterrupt:
+        print("\n[INFO] 사용자가 종료했습니다. (Ctrl+C) 안전하게 종료됩니다. 👋")
+        sys.exit(0)
     except Exception as e:
-        print(f"[!] 실행 중 오류 발생: {e}")
+        print(f"\n[!] 실행 중 오류 발생: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
