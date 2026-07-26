@@ -9,8 +9,9 @@ try:
     from plugp100.api.plug_device import PlugDevice
     PLUGP100_AVAILABLE = True
 except ImportError as e:
-    import logging
-    logging.getLogger("ameva_wol.tapo_plug").error(f"Failed to import plugp100: {e}")
+    import traceback
+    print(f"\n[!!! CRITICAL ERROR !!!] Failed to import plugp100: {e}")
+    traceback.print_exc()
     TapoClient = None
     PlugDevice = None
     PLUGP100_AVAILABLE = False
