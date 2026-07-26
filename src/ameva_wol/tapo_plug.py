@@ -9,7 +9,9 @@ try:
     from plugp100.api.plug_device import PlugDevice
     from plugp100.protocol.klap_protocol import KlapProtocol
     from http.cookies import Morsel
+    from urllib.parse import urlparse
     
+    # Monkey-patch session_post for missing cookies
     _orig_session_post = KlapProtocol.session_post
     async def _patched_session_post(self, url: str, cookies=None, params=None, data=None):
         resp, response_data = await _orig_session_post(self, url, cookies, params, data)
@@ -23,6 +25,16 @@ try:
             resp.cookies["TIMEOUT"] = m
         return resp, response_data
     KlapProtocol.session_post = _patched_session_post
+
+    # Monkey-patch __init__ for tuple self._host bug
+    _orig_klap_init = KlapProtocol.__init__
+    def _patched_klap_init(self, auth_credential, url):
+        _orig_klap_init(self, auth_credential, url)
+        if isinstance(self._host, tuple):
+            self._host = self._host[1]
+        elif not isinstance(self._host, str):
+            self._host = urlparse(url).hostname
+    KlapProtocol.__init__ = _patched_klap_init
 
     PLUGP100_AVAILABLE = True
 except ImportError as e:
