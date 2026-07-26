@@ -1,25 +1,26 @@
 #!/bin/bash
 
 # ==========================================
-# AMEVA-WoL Extreme Auto-Restart Script
+# AMEVA-WoL Termux All-in-One Auto-Runner
 # ==========================================
 
 # 1. Acquire Android Wake Lock (Prevents CPU sleep when screen is off)
 echo "[*] Acquiring Termux Wake Lock..."
 termux-wake-lock
 
-# 2. Check and activate virtual environment if it exists
-if [ -d "venv" ]; then
-    echo "[*] Activating virtual environment..."
-    source venv/bin/activate
-fi
+# 2. Install native dependencies (Bypass pip compilation errors on Android)
+# (py3compile 에러가 떠도 무시하고 진행됩니다. 실제 설치는 정상적으로 되기 때문입니다.)
+echo "[*] Ensuring native Android packages are installed..."
+pkg install -y python-cryptography python-psutil || true
 
-# Move into src directory if we are at project root, so python finds the module
-if [ -d "src" ]; then
-    cd src
-fi
+# 3. Install remaining python dependencies
+echo "[*] Installing Python requirements..."
+pip install -r requirements.txt
 
-# 3. Infinite Restart Loop
+# 파이썬이 src 안의 모듈을 찾을 수 있도록 환경변수 추가
+export PYTHONPATH="src:$PYTHONPATH"
+
+# 4. Infinite Restart Loop
 echo "[*] Starting AMEVA-WoL Daemon..."
 while true; do
     echo "----------------------------------------"
@@ -27,12 +28,11 @@ while true; do
     echo "----------------------------------------"
     
     python -m ameva_wol
-
     
     # If it reaches here, the bot crashed or was killed
     echo "[!] WARNING: Bot has stopped or crashed!"
     echo "[!] Restarting in 5 seconds... (Press Ctrl+C quickly to stop completely)"
     
-    # Wait 5 seconds before restarting to prevent rapid crash loops (CPU spam)
+    # Wait 5 seconds before restarting
     sleep 5
 done
